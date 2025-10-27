@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api import deps
-from app.core.security.password import get_password_hash
+from app.api import api_messages, deps
+from app.core.security.password import get_password_hash, is_password_too_simple
 from app.models import User
 from app.schemas.requests import UserUpdatePasswordRequest
 from app.schemas.responses import UserResponse
@@ -41,6 +41,18 @@ async def reset_current_user_password(
     session: AsyncSession = Depends(deps.get_session),
     current_user: User = Depends(deps.get_current_user),
 ) -> None:
+    pass_check_result = is_password_too_simple(user_update_password.password)
+    if pass_check_result:
+        detail = (
+            pass_check_result[1]
+            if isinstance(pass_check_result, tuple)
+            else api_messages.PASSWORD_INVALID
+        )
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=detail,
+        )
+
     current_user.pass_hash = get_password_hash(user_update_password.password)
     session.add(current_user)
     await session.commit()

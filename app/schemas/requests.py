@@ -18,3 +18,8 @@ class UserCreateRequest(BaseRequest):
     email: EmailStr
     password: str
     username: str
+
+
+class UserLoginRequest(BaseRequest):
+    email: EmailStr
+    password: str

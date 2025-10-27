@@ -3,7 +3,6 @@ import time
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,10 +13,15 @@ from app.core.security.jwt import create_jwt_token
 from app.core.security.password import (
     DUMMY_PASSWORD,
     get_password_hash,
+    is_password_too_simple,
     verify_password,
 )
 from app.models import RefreshToken, User
-from app.schemas.requests import RefreshTokenRequest, UserCreateRequest
+from app.schemas.requests import (
+    RefreshTokenRequest,
+    UserCreateRequest,
+    UserLoginRequest,
+)
 from app.schemas.responses import AccessTokenResponse, UserResponse
 
 router = APIRouter()
@@ -68,7 +72,7 @@ REFRESH_TOKEN_RESPONSES: dict[int | str, dict[str, Any]] = {
 )
 async def login_access_token(
     session: AsyncSession = Depends(deps.get_session),
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    form_data: UserLoginRequest = Depends(),  # replace username with email
 ) -> AccessTokenResponse:
     user = await session.scalar(select(User).where(User.email == form_data.username))
 
@@ -170,18 +174,23 @@ async def register_new_user(
 ) -> User:
     # Check if email is already used
     user = await session.scalar(select(User).where(User.email == new_user.email))
+
+    pass_check_result = is_password_too_simple(new_user.password)
+    if pass_check_result:
+        detail = (
+            pass_check_result[1]
+            if isinstance(pass_check_result, tuple)
+            else api_messages.PASSWORD_INVALID
+        )
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=detail,
+        )
+
     if user is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=api_messages.EMAIL_ADDRESS_ALREADY_USED,
-        )
-
-    # Check if username is already used
-    user = await session.scalar(select(User).where(User.username == new_user.username))
-    if user is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already used",
         )
 
     user = User(
