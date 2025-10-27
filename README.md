@@ -7,6 +7,7 @@ Just use `git clone`, and go to project directory, you know it...
 Then create a `venv`
 
 ### 1. Install dependecies with [Poetry](https://python-poetry.org/docs/)
+**USE BASH**
 ```bash
 ### Poetry install (python3.13)
 pip install poetry
@@ -30,4 +31,13 @@ alembic upgrade head
 ```bash
 uvicorn app.main:app --reload
 
+```
+
+
+### DEV
+#### Making migrations
+```bash
+alembic revision --autogenerate -m "migration_name"
+
+alembic upgrade head
 ```

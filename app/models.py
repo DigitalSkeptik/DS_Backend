@@ -55,11 +55,11 @@ class User(Base):
         default=lambda _: str(uuid.uuid4()),
     )
     email: Mapped[str] = mapped_column(
-        String(256), nullable=False, unique=False, index=True
+        String(256), nullable=False, unique=True, index=True
     )
     pass_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     username: Mapped[str] = mapped_column(
-        String(256), nullable=False, unique=True, index=True
+        String(256), nullable=False, unique=False, index=True
     )
 
     # Relationships
