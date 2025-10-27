@@ -34,6 +34,12 @@ def is_password_too_simple(password: str) -> bool | tuple[bool, str]:
             "Password must contain at least one capital letter",
         )  # Changed {} to ()
 
+    if not any(char.isdigit() for char in password):
+        return (
+            True,
+            "Password must contain at least one number",
+        )  # Changed {} to ()
+
     if not any(char in "!@#$%^&*()" for char in password):
         return (
             True,

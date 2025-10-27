@@ -74,7 +74,7 @@ async def login_access_token(
     session: AsyncSession = Depends(deps.get_session),
     form_data: UserLoginRequest = Depends(),  # replace username with email
 ) -> AccessTokenResponse:
-    user = await session.scalar(select(User).where(User.email == form_data.username))
+    user = await session.scalar(select(User).where(User.email == form_data.email))
 
     if user is None:
         # this is naive method to not return early
