@@ -52,7 +52,7 @@ python_version = "3.13"
 strict = true
 exclude = [   
     "alembic",
-    "app/tests/conftest",
+    "^conftest\\.py$",
 ]
 
 [tool.ruff]
