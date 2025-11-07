@@ -2,7 +2,7 @@ import logging
 import os
 import uuid
 from collections.abc import AsyncGenerator, Callable
-from typing import Any
+from typing import Any, Dict, Optional
 
 import pytest
 import pytest_asyncio
@@ -144,7 +144,7 @@ async def fixture_default_user(
 
 
 @pytest_asyncio.fixture(name="default_user_headers", scope="function")
-async def fixture_default_user_headers(default_user: User) -> dict[str, str]:
+async def fixture_default_user_headers(default_user: User) -> Dict[str, str]:
     """Provide headers with default user authentication."""
     return {"Authorization": f"Bearer {TEST_USER_ACCESS_TOKEN}"}
 
@@ -191,13 +191,13 @@ async def fixture_authenticated_client(
 
 # Test data fixtures for different scenarios
 @pytest_asyncio.fixture(name="valid_registration_data", scope="session")
-def fixture_valid_registration_data() -> dict[str, Any]:
+def fixture_valid_registration_data() -> Dict[str, Any]:
     """Provide valid registration data for testing."""
     return {"email": "user@example.com", "password": "String123!", "username": "string"}
 
 
 @pytest_asyncio.fixture(name="invalid_registration_data", scope="session")
-def fixture_invalid_registration_data() -> dict[str, dict[str, Any]]:
+def fixture_invalid_registration_data() -> Dict[str, Dict[str, Any]]:
     """Provide various invalid registration data scenarios."""
     return {
         "missing_email": {"password": "String123!", "username": "string2"},
@@ -248,13 +248,13 @@ def fixture_invalid_registration_data() -> dict[str, dict[str, Any]]:
 
 
 @pytest_asyncio.fixture(name="valid_login_data", scope="session")
-def fixture_valid_login_data() -> dict[str, Any]:
+def fixture_valid_login_data() -> Dict[str, Any]:
     """Provide valid login data for testing."""
     return {"email": "useeeer@mail.ru", "password": "Password123!"}
 
 
 @pytest_asyncio.fixture(name="invalid_login_data", scope="session")
-def fixture_invalid_login_data() -> dict[str, dict[str, Any]]:
+def fixture_invalid_login_data() -> Dict[str, Dict[str, Any]]:
     """Provide various invalid login data scenarios."""
     return {
         "wrong_password": {"email": "useeeer@mail.ru", "password": "WrongPass123!"},
@@ -263,13 +263,13 @@ def fixture_invalid_login_data() -> dict[str, dict[str, Any]]:
 
 
 @pytest_asyncio.fixture(name="valid_password_reset_data", scope="session")
-def fixture_valid_password_reset_data() -> dict[str, Any]:
+def fixture_valid_password_reset_data() -> Dict[str, Any]:
     """Provide valid password reset data for testing."""
     return {"new_password": "String123!", "cyrillic_password": "Пароль123!"}
 
 
 @pytest_asyncio.fixture(name="invalid_password_reset_data", scope="session")
-def fixture_invalid_password_reset_data() -> dict[str, Any]:
+def fixture_invalid_password_reset_data() -> Dict[str, Any]:
     """Provide invalid password reset data for testing."""
     return {
         "password": "stringaaaa"  # Empty password case
