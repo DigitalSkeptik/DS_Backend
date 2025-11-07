@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.api import api_messages, deps
 from app.models import CompletedModule, Module, Question, Test, User
-from app.schemas.requests import TestSubmissionRequest
+from app.schemas.requests import TestAnswerRequest, TestSubmissionRequest
 from app.schemas.responses import (
     AnswerOptionResponse,
     CorrectAnswerResponse,
@@ -133,6 +133,83 @@ async def get_module_test(
             )
             for q in questions
         ],
+    )
+
+
+@router.post(
+    "/{test_id}/answer",
+    response_model=QuestionResultResponse,
+    responses=SUBMIT_RESPONSES,
+    description="Validate a single answer and return correctness with explanation (stateless)",
+)
+async def check_single_answer(
+    test_id: str,
+    data: TestAnswerRequest,
+    current_user: User = Depends(deps.get_current_user),
+    session: AsyncSession = Depends(deps.get_session),
+) -> QuestionResultResponse:
+    # Load test with related data
+    test = await session.scalar(
+        select(Test)
+        .options(
+            selectinload(Test.module).selectinload(Module.course),
+            selectinload(Test.questions).selectinload(Question.answer_options),
+        )
+        .where(Test.unique_id == test_id)
+    )
+    if not test:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=api_messages.TEST_NOT_FOUND,
+        )
+
+    # Verify access
+    has_access = await deps.verify_course_access(
+        test.module.course_id, current_user, session
+    )
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=api_messages.TEST_ACCESS_DENIED,
+        )
+
+    # Validate that question belongs to this test
+    question = next(
+        (q for q in test.questions if q.unique_id == data.question_id), None
+    )
+    if not question:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=api_messages.TEST_INVALID_SUBMISSION,
+        )
+
+    # Validate selected option belongs to this question
+    selected_option = next(
+        (o for o in question.answer_options if o.unique_id == data.selected_option_id),
+        None,
+    )
+    if not selected_option:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=api_messages.TEST_INVALID_OPTION,
+        )
+
+    # Find correct option
+    correct_option = next((o for o in question.answer_options if o.is_correct), None)
+    is_correct = bool(selected_option.is_correct)
+
+    return QuestionResultResponse(
+        question_id=question.unique_id,
+        question_text=question.question_text,
+        selected_option_id=data.selected_option_id,
+        is_correct=is_correct,
+        correct_option=CorrectAnswerResponse(
+            option_id=correct_option.unique_id if correct_option else "",
+            answer_text=correct_option.answer_text if correct_option else "",
+            explanation=getattr(correct_option, "explanation", None)
+            if correct_option
+            else None,
+        ),
     )
 
 

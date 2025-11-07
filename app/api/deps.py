@@ -1,17 +1,13 @@
 from collections.abc import AsyncGenerator
-from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import api_messages
 from app.core import database_session
 from app.core.security.jwt import verify_jwt_token
-from app.models import Module, PurchasedCourse, User
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/access-token")
+from app.models import Course, Module, PurchasedCourse, User
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:
@@ -20,9 +16,16 @@ async def get_session() -> AsyncGenerator[AsyncSession]:
 
 
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> User:
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
     token_payload = verify_jwt_token(token)
 
     user = await session.scalar(select(User).where(User.unique_id == token_payload.sub))
@@ -47,7 +50,10 @@ async def verify_course_access(
             PurchasedCourse.course_id == course_id,
         )
     )
-    return purchase is not None
+    is_course_free = await session.scalar(
+        select(Course).where(Course.unique_id == course_id, Course.price == 0)
+    )
+    return purchase is not None or is_course_free
 
 
 async def get_module_with_access_check(
