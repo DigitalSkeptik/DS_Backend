@@ -50,7 +50,10 @@ source = ["app"]
 [tool.mypy]
 python_version = "3.13"
 strict = true
-exclude = ["alembic", "app/tests/conftest.py"]
+exclude = [   
+    "alembic",
+    "app/tests/conftest",
+]
 
 [tool.ruff]
 target-version = "py313"
