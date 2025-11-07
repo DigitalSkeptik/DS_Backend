@@ -1,5 +1,6 @@
 import logging
 import os
+import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -157,8 +158,6 @@ async def fixture_test_user_factory(session: AsyncSession) -> AsyncGenerator[cal
     ) -> User:
         """Create a test user with given parameters."""
         if unique_id is None:
-            import uuid
-
             unique_id = str(uuid.uuid4())
 
         user = User(

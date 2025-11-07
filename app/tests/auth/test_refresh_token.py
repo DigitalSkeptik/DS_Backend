@@ -368,15 +368,10 @@ class TestRefreshToken:
         test_user_factory: callable,
     ) -> None:
         """Test refresh token with deleted user."""
-        import logging
-
-        logger = logging.getLogger(__name__)
-
         # Create user and login
         user = await test_user_factory(
             email="deletable@example.com", username="deletable", password="Password123!"
         )
-        logger.debug(f"Created user with ID: {user.unique_id}")
 
         login_response = await client.post(
             app.url_path_for("login_access_token"),
@@ -386,9 +381,6 @@ class TestRefreshToken:
             },
         )
         login_data = login_response.json()
-        logger.debug(
-            f"Login successful, got refresh token: {login_data['refresh_token'][:10]}..."
-        )
 
         # Delete user (use delete_current_user function from api/endpoints/users.py)
         _ = await client.delete(

@@ -253,9 +253,6 @@ class TestUserLogin:
         default_user: User,
     ) -> None:
         """Test that login timing is consistent for wrong password vs non-existent user."""
-        import time
-
-        # Time for wrong password
         start_time = time.time()
         response1 = await client.post(
             app.url_path_for("login_access_token"),
