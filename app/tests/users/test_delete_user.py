@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Any
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
@@ -61,7 +64,7 @@ class TestDeleteUser:
         self,
         client: AsyncClient,
         session: AsyncSession,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test deletion of multiple users independently."""
         # Create multiple users
@@ -192,7 +195,7 @@ class TestDeleteUser:
         self,
         client: AsyncClient,
         session: AsyncSession,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test user deletion with token from already deleted user."""
         # Create user and get token
@@ -252,7 +255,7 @@ class TestDeleteUser:
         self,
         client: AsyncClient,
         session: AsyncSession,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test that user deletion cascades to related data."""
         # Create user with related data (if any relationships exist)
@@ -318,7 +321,7 @@ class TestDeleteUser:
         self,
         client: AsyncClient,
         default_user: User,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test that header authentication is preferred over cookie for deletion."""
         # Create two users

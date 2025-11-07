@@ -1,7 +1,7 @@
 import logging
 import os
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from typing import Any
 
 import pytest
@@ -150,11 +150,13 @@ async def fixture_default_user_headers(default_user: User) -> dict[str, str]:
 
 
 @pytest_asyncio.fixture(name="test_user_factory", scope="function")
-async def fixture_test_user_factory(session: AsyncSession) -> AsyncGenerator[callable]:
+async def fixture_test_user_factory(
+    session: AsyncSession,
+) -> AsyncGenerator[Callable[..., Any]]:
     """Factory for creating test users with custom parameters."""
 
     async def create_user(
-        email: str, username: str, password: str, unique_id: str = None
+        email: str, username: str, password: str, unique_id: str | None = None
     ) -> User:
         """Create a test user with given parameters."""
         if unique_id is None:
@@ -176,7 +178,7 @@ async def fixture_test_user_factory(session: AsyncSession) -> AsyncGenerator[cal
 
 @pytest_asyncio.fixture(name="authenticated_client", scope="function")
 async def fixture_authenticated_client(
-    client: AsyncClient, test_user_factory: callable
+    client: AsyncClient, test_user_factory: Callable[..., Any]
 ) -> AsyncGenerator[AsyncClient]:
     """Provide an authenticated client with a test user."""
     user = await test_user_factory(
@@ -261,7 +263,7 @@ def fixture_invalid_login_data() -> dict[str, dict[str, Any]]:
 
 
 @pytest_asyncio.fixture(name="valid_password_reset_data", scope="session")
-def fixture_valid_password_reset_data() -> dict[str, dict[str, Any]]:
+def fixture_valid_password_reset_data() -> dict[str, Any]:
     """Provide valid password reset data for testing."""
     return {"new_password": "String123!", "cyrillic_password": "Пароль123!"}
 

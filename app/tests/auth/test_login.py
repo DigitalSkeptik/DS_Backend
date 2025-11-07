@@ -1,4 +1,5 @@
 import time
+from typing import Any
 
 import pytest
 from fastapi import status
@@ -175,7 +176,7 @@ class TestUserLogin:
         self,
         client: AsyncClient,
         default_user: User,
-        invalid_login_data: dict,
+        invalid_login_data: dict[str, Any],
     ) -> None:
         """Test login with wrong password returns 400."""
         response = await client.post(
@@ -192,7 +193,7 @@ class TestUserLogin:
     async def test_login_with_wrong_email(
         self,
         client: AsyncClient,
-        invalid_login_data: dict,
+        invalid_login_data: dict[str, Any],
     ) -> None:
         """Test login with wrong email returns 400."""
         response = await client.post(

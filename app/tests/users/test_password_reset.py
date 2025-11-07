@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Any
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
@@ -22,7 +25,7 @@ class TestPasswordReset:
         client: AsyncClient,
         default_user: User,
         default_user_headers: dict[str, str],
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test successful password reset with valid token."""
         new_password = valid_password_reset_data["new_password"]
@@ -42,7 +45,7 @@ class TestPasswordReset:
         session: AsyncSession,
         default_user: User,
         default_user_headers: dict[str, str],
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test that password reset updates password in database."""
         new_password = valid_password_reset_data["new_password"]
@@ -69,7 +72,7 @@ class TestPasswordReset:
         session: AsyncSession,
         default_user: User,
         default_user_headers: dict[str, str],
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test successful password reset with Cyrillic characters."""
         cyrillic_password = valid_password_reset_data["cyrillic_password"]
@@ -110,7 +113,7 @@ class TestPasswordReset:
     async def test_reset_password_without_token(
         self,
         client: AsyncClient,
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test password reset without authentication token."""
         response = await client.post(
@@ -124,7 +127,7 @@ class TestPasswordReset:
     async def test_reset_password_with_invalid_token(
         self,
         client: AsyncClient,
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test password reset with invalid token."""
         response = await client.post(
@@ -139,7 +142,7 @@ class TestPasswordReset:
     async def test_reset_password_with_expired_token(
         self,
         client: AsyncClient,
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test password reset with expired token."""
         response = await client.post(
@@ -156,7 +159,7 @@ class TestPasswordReset:
         self,
         client: AsyncClient,
         default_user_headers: dict[str, str],
-        invalid_password_reset_data: dict,
+        invalid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test password reset with empty password."""
         response = await client.post(
@@ -221,7 +224,7 @@ class TestPasswordReset:
         self,
         client: AsyncClient,
         default_user_headers: dict[str, str],
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test password reset with extra fields in request."""
         response = await client.post(
@@ -243,7 +246,7 @@ class TestPasswordReset:
         self,
         client: AsyncClient,
         session: AsyncSession,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test password reset with token from deleted user."""
         # Create user and get token
@@ -353,7 +356,7 @@ class TestPasswordReset:
         session: AsyncSession,
         default_user: User,
         default_user_headers: dict[str, str],
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test that password reset doesn't change other user fields."""
         original_email = default_user.email
@@ -382,7 +385,7 @@ class TestPasswordReset:
         session: AsyncSession,
         default_user: User,
         default_user_headers: dict[str, str],
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test that old password no longer works after reset."""
         old_password = "Geralt123!"  # From conftest
@@ -424,7 +427,7 @@ class TestPasswordReset:
         self,
         client: AsyncClient,
         default_user: User,
-        valid_password_reset_data: dict,
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test password reset with cookie-based authentication."""
         # Set access token cookie
@@ -442,8 +445,8 @@ class TestPasswordReset:
         self,
         client: AsyncClient,
         default_user: User,
-        test_user_factory: callable,
-        valid_password_reset_data: dict,
+        test_user_factory: Callable[..., Any],
+        valid_password_reset_data: dict[str, Any],
     ) -> None:
         """Test that header authentication is preferred over cookie for password reset."""
         # Create two users

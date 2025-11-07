@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Any
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
@@ -68,7 +71,7 @@ class TestReadUser:
     async def test_read_current_user_with_different_valid_tokens(
         self,
         client: AsyncClient,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test user info retrieval with different valid tokens."""
         # Create multiple users
@@ -187,7 +190,7 @@ class TestReadUser:
         self,
         client: AsyncClient,
         session: AsyncSession,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test user info retrieval with token from deleted user."""
         # Create user and get token
@@ -307,7 +310,7 @@ class TestReadUser:
         self,
         client: AsyncClient,
         default_user: User,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test that header authentication is preferred over cookie."""
         # Create two users

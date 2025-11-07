@@ -1,4 +1,6 @@
 import time
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 from fastapi import status
@@ -91,6 +93,7 @@ class TestRefreshToken:
                 RefreshToken.refresh_token == original_refresh_token
             )
         )
+        assert original_token_db is not None
         assert original_token_db.used is True
 
         # Verify new refresh token exists and is not used
@@ -359,13 +362,13 @@ class TestRefreshToken:
         )
 
         # Should have one more token (original marked as used, new one created)
-        assert final_count == initial_count + 1
+        assert final_count == (initial_count or 0) + 1
 
     async def test_refresh_token_with_deleted_user(
         self,
         client: AsyncClient,
         session: AsyncSession,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test refresh token with deleted user."""
         # Create user and login

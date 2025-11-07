@@ -16,7 +16,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     BigInteger,
@@ -142,7 +142,7 @@ class Module(Base):
     )
     title: Mapped[str] = mapped_column(String(256), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    content_json: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    content_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=True)
     position: Mapped[int] = mapped_column(nullable=False)
 
     # Relationships

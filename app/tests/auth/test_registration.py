@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Any
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
@@ -19,7 +22,7 @@ class TestUserRegistration:
         self,
         client: AsyncClient,
         session: AsyncSession,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test successful registration with duplicate username but different email."""
         # Create first user
@@ -47,7 +50,7 @@ class TestUserRegistration:
     async def test_register_user_with_all_valid_fields(
         self,
         client: AsyncClient,
-        valid_registration_data: dict,
+        valid_registration_data: dict[str, Any],
     ) -> None:
         """Test successful registration with all valid fields."""
         response = await client.post(
@@ -109,7 +112,7 @@ class TestUserRegistration:
     async def test_register_user_with_existing_email(
         self,
         client: AsyncClient,
-        test_user_factory: callable,
+        test_user_factory: Callable[..., Any],
     ) -> None:
         """Test registration with already existing email returns 400."""
         await test_user_factory(
@@ -131,7 +134,7 @@ class TestUserRegistration:
     async def test_register_user_missing_email(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with missing email returns 422."""
         response = await client.post(
@@ -145,7 +148,7 @@ class TestUserRegistration:
     async def test_register_user_missing_username(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with missing username returns 422."""
         response = await client.post(
@@ -159,7 +162,7 @@ class TestUserRegistration:
     async def test_register_user_missing_password(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with missing password returns 422."""
         response = await client.post(
@@ -173,7 +176,7 @@ class TestUserRegistration:
     async def test_register_user_invalid_email_format(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with invalid email format returns 422."""
         response = await client.post(
@@ -187,7 +190,7 @@ class TestUserRegistration:
     async def test_register_user_simple_password(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with too simple password returns 422."""
         response = await client.post(
@@ -206,7 +209,7 @@ class TestUserRegistration:
     async def test_register_user_empty_body(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with empty request body returns 422."""
         response = await client.post(
@@ -223,7 +226,7 @@ class TestUserRegistration:
     async def test_register_password_not_exposed_in_response(
         self,
         client: AsyncClient,
-        valid_registration_data: dict,
+        valid_registration_data: dict[str, Any],
     ) -> None:
         """Test that password is not exposed in registration response."""
         response = await client.post(
@@ -240,7 +243,7 @@ class TestUserRegistration:
     async def test_register_sql_injection_in_email(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test SQL injection attempt in email field is handled safely."""
         response = await client.post(
@@ -281,7 +284,7 @@ class TestUserRegistration:
     async def test_register_uppercase_email(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with uppercase email is handled correctly."""
         response = await client.post(
@@ -298,7 +301,7 @@ class TestUserRegistration:
     async def test_register_minimum_length_password(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with minimum valid password length."""
         response = await client.post(
@@ -313,7 +316,7 @@ class TestUserRegistration:
     async def test_register_cyrillic_email(
         self,
         client: AsyncClient,
-        invalid_registration_data: dict,
+        invalid_registration_data: dict[str, Any],
     ) -> None:
         """Test registration with Cyrillic email returns 400."""
         response = await client.post(
@@ -330,7 +333,7 @@ class TestUserRegistration:
         self,
         client: AsyncClient,
         session: AsyncSession,
-        valid_registration_data: dict,
+        valid_registration_data: dict[str, Any],
     ) -> None:
         """Test that successful registration creates user record in database."""
         await client.post(
@@ -347,7 +350,7 @@ class TestUserRegistration:
         self,
         client: AsyncClient,
         session: AsyncSession,
-        valid_registration_data: dict,
+        valid_registration_data: dict[str, Any],
     ) -> None:
         """Test that password is properly hashed in database."""
         await client.post(
