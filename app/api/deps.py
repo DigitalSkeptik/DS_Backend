@@ -20,22 +20,42 @@ async def get_current_user(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> User:
-    token = request.cookies.get("access_token")
+    # Check for token in Authorization header first (for test compatibility)
+    auth_header = request.headers.get("Authorization")
+    token = None
+
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        print(f"DEBUG: Found token in Authorization header: {token[:20]}...")
+    else:
+        # Fallback to cookie for normal operation
+        token = request.cookies.get("access_token")
+        if token:
+            print(f"DEBUG: Found token in cookie: {token[:20]}...")
+
     if not token:
+        print("DEBUG: No token found in headers or cookies")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
         )
 
-    token_payload = verify_jwt_token(token)
+    try:
+        token_payload = verify_jwt_token(token)
+        print(f"DEBUG: JWT verification successful, user_id: {token_payload.sub}")
+    except HTTPException as e:
+        print(f"DEBUG: JWT verification failed: {e.detail}")
+        raise
 
     user = await session.scalar(select(User).where(User.unique_id == token_payload.sub))
 
     if user is None:
+        print(f"DEBUG: User not found in database for user_id: {token_payload.sub}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=api_messages.JWT_ERROR_USER_REMOVED,
         )
+    print(f"DEBUG: User found: {user.email}")
     return user
 
 

@@ -16,7 +16,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     BigInteger,
@@ -86,7 +86,7 @@ class RefreshToken(Base):
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     exp: Mapped[int] = mapped_column(BigInteger, nullable=False)
     user_id: Mapped[str] = mapped_column(
-        ForeignKey("user.UniqueID", ondelete="CASCADE"),
+        ForeignKey("user.UniqueID", ondelete="CASCADE"), nullable=False
     )
     user: Mapped["User"] = relationship(back_populates="refresh_tokens")
 
@@ -142,7 +142,7 @@ class Module(Base):
     )
     title: Mapped[str] = mapped_column(String(256), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    content_json: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    content_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=True)
     position: Mapped[int] = mapped_column(nullable=False)
 
     # Relationships

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import api_messages, deps
 from app.core.security.password import get_password_hash, is_password_too_simple
-from app.models import User
+from app.models import RefreshToken, User
 from app.schemas.requests import UserUpdatePasswordRequest
 from app.schemas.responses import UserResponse
 
@@ -27,6 +27,9 @@ async def delete_current_user(
     current_user: User = Depends(deps.get_current_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> None:
+    await session.execute(
+        delete(RefreshToken).where(RefreshToken.user_id == current_user.unique_id)
+    )
     await session.execute(delete(User).where(User.unique_id == current_user.unique_id))
     await session.commit()
 
@@ -42,6 +45,7 @@ async def reset_current_user_password(
     current_user: User = Depends(deps.get_current_user),
 ) -> None:
     pass_check_result = is_password_too_simple(user_update_password.password)
+
     if pass_check_result:
         detail = (
             pass_check_result[1]
