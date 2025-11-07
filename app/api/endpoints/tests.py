@@ -271,14 +271,10 @@ async def submit_test(
         selected_id = answer_map[question.unique_id]
 
         # Find selected option and correct option
-        selected_option = None
-        correct_option = None
-
-        for opt in question.answer_options:
-            if opt.unique_id == selected_id:
-                selected_option = opt
-            if opt.is_correct:
-                correct_option = opt
+        selected_option = next(
+            o for o in question.answer_options if o.unique_id == selected_id
+        )
+        correct_option = next(o for o in question.answer_options if o.is_correct)
 
         if not selected_option:
             raise HTTPException(

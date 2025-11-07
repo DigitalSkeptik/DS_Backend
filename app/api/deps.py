@@ -54,7 +54,10 @@ async def verify_course_access(
     is_course_free = await session.scalar(
         select(Course).where(Course.unique_id == course_id, Course.price == 0)
     )
-    return purchase is not None or is_course_free
+    if is_course_free and not purchase:
+        return True
+
+    return False
 
 
 async def get_module_with_access_check(
