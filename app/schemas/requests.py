@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class BaseRequest(BaseModel):
@@ -23,3 +23,16 @@ class UserCreateRequest(BaseRequest):
 class UserLoginRequest(BaseRequest):
     email: EmailStr
     password: str
+
+
+class TestAnswerRequest(BaseRequest):
+    """Single answer in test submission"""
+
+    question_id: str = Field(..., description="UUID of the question")
+    selected_option_id: str = Field(..., description="UUID of selected answer option")
+
+
+class TestSubmissionRequest(BaseRequest):
+    """Complete test submission with all answers"""
+
+    answers: list[TestAnswerRequest] = Field(..., min_length=1)

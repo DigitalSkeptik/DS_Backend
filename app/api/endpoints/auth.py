@@ -2,7 +2,7 @@ import secrets
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -71,6 +71,7 @@ REFRESH_TOKEN_RESPONSES: dict[int | str, dict[str, Any]] = {
     description="OAuth2 compatible token, get an access token for future requests using username and password",
 )
 async def login_access_token(
+    response: Response,
     session: AsyncSession = Depends(deps.get_session),
     form_data: UserLoginRequest = Depends(),  # replace username with email
 ) -> AccessTokenResponse:
@@ -101,6 +102,19 @@ async def login_access_token(
     session.add(refresh_token)
     await session.commit()
 
+    # Set HttpOnly cookie with access token
+    response.set_cookie(
+        key="access_token",
+        value=jwt_token.access_token,
+        httponly=True,
+        secure=True,  # consider False for local HTTP dev if needed
+        samesite="lax",  # set to "none" if cross-site cookies are required (requires HTTPS)
+        max_age=get_settings().security.jwt_access_token_expire_secs,
+        expires=jwt_token.payload.exp,
+        path="/",
+    )
+
+    # Keep response body for backward compatibility (frontend may still read it)
     return AccessTokenResponse(
         access_token=jwt_token.access_token,
         expires_at=jwt_token.payload.exp,
@@ -117,6 +131,7 @@ async def login_access_token(
 )
 async def refresh_token(
     data: RefreshTokenRequest,
+    response: Response,
     session: AsyncSession = Depends(deps.get_session),
 ) -> AccessTokenResponse:
     token = await session.scalar(
@@ -153,6 +168,18 @@ async def refresh_token(
     )
     session.add(refresh_token)
     await session.commit()
+
+    # Rotate access token cookie
+    response.set_cookie(
+        key="access_token",
+        value=jwt_token.access_token,
+        httponly=True,
+        secure=True,  # consider False for local HTTP dev if needed
+        samesite="lax",  # set to "none" if cross-site cookies are required (requires HTTPS)
+        max_age=get_settings().security.jwt_access_token_expire_secs,
+        expires=jwt_token.payload.exp,
+        path="/",
+    )
 
     return AccessTokenResponse(
         access_token=jwt_token.access_token,

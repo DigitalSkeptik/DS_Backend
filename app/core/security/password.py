@@ -40,7 +40,7 @@ def is_password_too_simple(password: str) -> bool | tuple[bool, str]:
             "Password must contain at least one number",
         )  # Changed {} to ()
 
-    if not any(char in "!@#$%^&*()" for char in password):
+    if not any(char in "!@#$%^&*()_+=-" for char in password):
         return (
             True,
             "Password must contain at least one special character",

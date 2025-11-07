@@ -212,6 +212,7 @@ class AnswerOption(Base):
     )
     answer_text: Mapped[str] = mapped_column(Text, nullable=False)
     is_correct: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    explanation: Mapped[str] = mapped_column(Text, nullable=True)
 
     # Relationships
     question: Mapped["Question"] = relationship(back_populates="answer_options")

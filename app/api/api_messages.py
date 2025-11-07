@@ -4,3 +4,12 @@ REFRESH_TOKEN_NOT_FOUND = "Refresh token not found"
 REFRESH_TOKEN_EXPIRED = "Refresh token expired"
 REFRESH_TOKEN_ALREADY_USED = "Refresh token already used"
 EMAIL_ADDRESS_ALREADY_USED = "Cannot use this email address"
+
+# Test-related error messages
+TEST_NOT_FOUND = "Test not found"
+TEST_MODULE_HAS_NO_TEST = "This module has no test"
+TEST_ACCESS_DENIED = "You must purchase this course to access its tests"
+TEST_INVALID_SUBMISSION = "Must answer all questions exactly once"
+TEST_INVALID_OPTION = "Invalid answer option selected"
+MODULE_NOT_FOUND = "Module not found"
+COURSE_NOT_PURCHASED = "Course not purchased"
