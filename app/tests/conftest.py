@@ -190,13 +190,13 @@ async def fixture_authenticated_client(
 
 
 # Test data fixtures for different scenarios
-@pytest_asyncio.fixture(name="valid_registration_data", scope="session")
+@pytest_asyncio.fixture(name="valid_registration_data", scope="session") # mypy: disable_error_code="type-var"
 def fixture_valid_registration_data() -> Dict[str, Any]:
     """Provide valid registration data for testing."""
     return {"email": "user@example.com", "password": "String123!", "username": "string"}
 
 
-@pytest_asyncio.fixture(name="invalid_registration_data", scope="session")
+@pytest_asyncio.fixture(name="invalid_registration_data", scope="session") # mypy: disable_error_code="type-var"
 def fixture_invalid_registration_data() -> Dict[str, Dict[str, Any]]:
     """Provide various invalid registration data scenarios."""
     return {
@@ -247,13 +247,13 @@ def fixture_invalid_registration_data() -> Dict[str, Dict[str, Any]]:
     }
 
 
-@pytest_asyncio.fixture(name="valid_login_data", scope="session")
+@pytest_asyncio.fixture(name="valid_login_data", scope="session") # mypy: disable_error_code="type-var"
 def fixture_valid_login_data() -> Dict[str, Any]:
     """Provide valid login data for testing."""
     return {"email": "useeeer@mail.ru", "password": "Password123!"}
 
 
-@pytest_asyncio.fixture(name="invalid_login_data", scope="session")
+@pytest_asyncio.fixture(name="invalid_login_data", scope="session") # mypy: disable_error_code="type-var"
 def fixture_invalid_login_data() -> Dict[str, Dict[str, Any]]:
     """Provide various invalid login data scenarios."""
     return {
@@ -262,13 +262,13 @@ def fixture_invalid_login_data() -> Dict[str, Dict[str, Any]]:
     }
 
 
-@pytest_asyncio.fixture(name="valid_password_reset_data", scope="session")
+@pytest_asyncio.fixture(name="valid_password_reset_data", scope="session") # mypy: disable_error_code="type-var"
 def fixture_valid_password_reset_data() -> Dict[str, Any]:
     """Provide valid password reset data for testing."""
     return {"new_password": "String123!", "cyrillic_password": "Пароль123!"}
 
 
-@pytest_asyncio.fixture(name="invalid_password_reset_data", scope="session")
+@pytest_asyncio.fixture(name="invalid_password_reset_data", scope="session") # mypy: disable_error_code="type-var"
 def fixture_invalid_password_reset_data() -> Dict[str, Any]:
     """Provide invalid password reset data for testing."""
     return {
