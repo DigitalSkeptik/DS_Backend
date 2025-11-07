@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api import api_messages
 from app.core import database_session
@@ -62,8 +63,6 @@ async def get_module_with_access_check(
     session: AsyncSession = Depends(get_session),
 ) -> Module:
     """Get module and verify user has purchased the course"""
-    from sqlalchemy.orm import selectinload
-
     # Load module with course relationship
     module = await session.scalar(
         select(Module)
