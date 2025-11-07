@@ -18,7 +18,7 @@ def get_password_hash(password: str) -> str:
     ).decode()
 
 
-def is_password_too_simple(password: str) -> bool | tuple[bool, str]:
+def is_password_too_simple(password: str) -> bool | tuple[bool, str]:  # noqa: C901 PLR0911
     if len(password) < MIN_PASSWORD_LENGTH:
         return (
             True,
@@ -45,6 +45,32 @@ def is_password_too_simple(password: str) -> bool | tuple[bool, str]:
             True,
             "Password must contain at least one special character",
         )  # Changed {} to ()
+
+    # Check for potential SQL injection patterns
+    sql_injection_patterns = [
+        "'",
+        ";",
+        "--",
+        "/*",
+        "*/",
+        "xp_",
+        "sp_",
+        "DROP",
+        "DELETE",
+        "INSERT",
+        "UPDATE",
+        "SELECT",
+        "UNION",
+        "EXEC",
+        "ALTER",
+        "CREATE",
+        "TRUNCATE",
+    ]
+
+    password_upper = password.upper()
+    for pattern in sql_injection_patterns:
+        if pattern in password_upper:
+            return (True, "Password contains invalid characters")
 
     return False
 

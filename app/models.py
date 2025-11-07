@@ -86,7 +86,7 @@ class RefreshToken(Base):
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     exp: Mapped[int] = mapped_column(BigInteger, nullable=False)
     user_id: Mapped[str] = mapped_column(
-        ForeignKey("user.UniqueID", ondelete="CASCADE"),
+        ForeignKey("user.UniqueID", ondelete="CASCADE"), nullable=False
     )
     user: Mapped["User"] = relationship(back_populates="refresh_tokens")
 

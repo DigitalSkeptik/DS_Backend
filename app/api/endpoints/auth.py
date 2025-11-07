@@ -71,9 +71,9 @@ REFRESH_TOKEN_RESPONSES: dict[int | str, dict[str, Any]] = {
     description="OAuth2 compatible token, get an access token for future requests using username and password",
 )
 async def login_access_token(
+    form_data: UserLoginRequest,
     response: Response,
     session: AsyncSession = Depends(deps.get_session),
-    form_data: UserLoginRequest = Depends(),  # replace username with email
 ) -> AccessTokenResponse:
     user = await session.scalar(select(User).where(User.email == form_data.email))
 
@@ -156,6 +156,14 @@ async def refresh_token(
             detail=api_messages.REFRESH_TOKEN_ALREADY_USED,
         )
 
+    # Check if user still exists
+    user = await session.scalar(select(User).where(User.unique_id == token.user_id))
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=api_messages.JWT_ERROR_USER_REMOVED,
+        )
+
     token.used = True
     session.add(token)
 
@@ -199,8 +207,20 @@ async def register_new_user(
     new_user: UserCreateRequest,
     session: AsyncSession = Depends(deps.get_session),
 ) -> User:
-    # Check if email is already used
-    user = await session.scalar(select(User).where(User.email == new_user.email))
+    # Normalize email to lowercase
+    normalized_email = new_user.email.lower()
+
+    # Check for non-ASCII characters in email (should return 400)
+    try:
+        normalized_email.encode("ascii")
+    except UnicodeEncodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email format",
+        )
+
+    # Check if email is already used (use normalized email)
+    user = await session.scalar(select(User).where(User.email == normalized_email))
 
     pass_check_result = is_password_too_simple(new_user.password)
     if pass_check_result:
@@ -221,7 +241,7 @@ async def register_new_user(
         )
 
     user = User(
-        email=new_user.email,
+        email=normalized_email,
         username=new_user.username,
         pass_hash=get_password_hash(new_user.password),
     )
