@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api import api_messages
+from app.api import admin_router, api_messages
 from app.api.endpoints import auth, tests, users
 
 auth_router = APIRouter()
@@ -29,7 +29,14 @@ api_router = APIRouter(
                 }
             },
         },
+        403: {
+            "description": "Admin access required",
+            "content": {
+                "application/json": {"example": {"detail": "Admin access required"}}
+            },
+        },
     }
 )
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(tests.router, prefix="/tests", tags=["tests"])
+api_router.include_router(admin_router.router, prefix="/admin", tags=["admin"])
