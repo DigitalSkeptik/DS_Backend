@@ -16,6 +16,7 @@ pydantic = { extras = ["dotenv", "email"], version = "^2.11.7" }
 pydantic-settings = "^2.10.1"
 pyjwt = "^2.10.1"
 python-multipart = "^0.0.20"
+slowapi = "^0.1.9"
 sqlalchemy = { extras = ["asyncio"], version = "^2.0.41" }
 
 [tool.poetry.group.dev.dependencies]

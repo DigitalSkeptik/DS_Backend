@@ -39,6 +39,28 @@ async def get_current_user(
     return user
 
 
+async def get_current_user_optional(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> User | None:
+    """
+    Returns the current user if authenticated, otherwise returns None.
+    Does not raise HTTPException for missing credentials.
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        return None
+
+    try:
+        token_payload = verify_jwt_token(token)
+        user = await session.scalar(
+            select(User).where(User.unique_id == token_payload.sub)
+        )
+        return user
+    except Exception:
+        return None
+
+
 async def verify_course_access(
     course_id: str,
     current_user: User = Depends(get_current_user),

@@ -73,7 +73,6 @@ async def get_course_modules(
     session: AsyncSession = Depends(deps.get_session),
 ) -> list[AdminModuleListResponse]:
     """Get all modules for a course"""
-    # Verify course exists
     course = await session.scalar(select(Course).where(Course.unique_id == course_id))
     if not course:
         raise HTTPException(
@@ -81,7 +80,6 @@ async def get_course_modules(
             detail=api_messages.COURSE_NOT_FOUND,
         )
 
-    # Load modules with test info
     result = await session.execute(
         select(Module)
         .options(selectinload(Module.tests).selectinload(Test.questions))
@@ -117,7 +115,6 @@ async def get_module(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminModuleResponse:
     """Get module with all details"""
-    # Load module with course and test
     module = await session.scalar(
         select(Module)
         .options(
@@ -135,7 +132,6 @@ async def get_module(
             detail=api_messages.MODULE_NOT_FOUND,
         )
 
-    # Build test responses if exists
     test_responses = []
     if module.tests:
         for test in module.tests:
@@ -193,7 +189,6 @@ async def create_module(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminModuleResponse:
     """Create a new module"""
-    # Verify course exists
     course = await session.scalar(select(Course).where(Course.unique_id == course_id))
     if not course:
         raise HTTPException(
@@ -201,7 +196,6 @@ async def create_module(
             detail=api_messages.COURSE_NOT_FOUND,
         )
 
-    # Create module
     module = Module(
         course_id=course_id,
         title=module_data.title,
@@ -212,7 +206,6 @@ async def create_module(
     session.add(module)
     await session.commit()
 
-    # Reload with all data
     await session.refresh(module)
     return await get_module(module.unique_id, current_admin, session)
 
@@ -230,7 +223,6 @@ async def update_module(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminModuleResponse:
     """Update an existing module"""
-    # Check if module exists
     module = await session.scalar(select(Module).where(Module.unique_id == module_id))
     if not module:
         raise HTTPException(
@@ -238,7 +230,6 @@ async def update_module(
             detail=api_messages.MODULE_NOT_FOUND,
         )
 
-    # Update fields if provided
     update_data = module_data.model_dump(exclude_unset=True)
     if update_data:
         await session.execute(
@@ -261,7 +252,6 @@ async def delete_module(
     session: AsyncSession = Depends(deps.get_session),
 ) -> None:
     """Delete a module"""
-    # Check if module exists
     module = await session.scalar(
         select(Module)
         .options(selectinload(Module.tests))
@@ -273,14 +263,12 @@ async def delete_module(
             detail=api_messages.MODULE_NOT_FOUND,
         )
 
-    # Check if module has test
     if module.tests and len(module.tests) > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=api_messages.MODULE_HAS_TEST,
         )
 
-    # Delete module
     await session.execute(delete(Module).where(Module.unique_id == module_id))
     await session.commit()
 
@@ -298,7 +286,6 @@ async def reorder_modules(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminBulkOperationResponse:
     """Reorder modules in a course"""
-    # Verify course exists
     course = await session.scalar(select(Course).where(Course.unique_id == course_id))
     if not course:
         raise HTTPException(
@@ -310,14 +297,12 @@ async def reorder_modules(
     error_count = 0
     errors = []
 
-    # Update each module's position
     for module_id, position in reorder_data.module_positions.items():
         if position < 0:
             error_count += 1
             errors.append(f"Invalid position for module {module_id}")
             continue
 
-        # Check if module exists and belongs to this course
         module = await session.scalar(
             select(Module).where(
                 Module.unique_id == module_id, Module.course_id == course_id
@@ -328,7 +313,6 @@ async def reorder_modules(
             errors.append(f"Module {module_id} not found in course")
             continue
 
-        # Update position
         await session.execute(
             update(Module)
             .where(Module.unique_id == module_id)

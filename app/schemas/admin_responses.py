@@ -1,8 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, JsonValue
 
 from app.models import UserRole
 
@@ -69,7 +68,7 @@ class AdminModuleResponse(BaseAdminResponse):
     course_id: str
     title: str
     description: str | None = None
-    content_json: dict[str, Any] | None = None
+    content_json: JsonValue | None = None
     position: int
     tests: list[AdminTestResponse] = []
     create_time: datetime

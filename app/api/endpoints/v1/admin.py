@@ -60,7 +60,6 @@ async def get_all_courses(
     session: AsyncSession = Depends(deps.get_session),
 ) -> list[AdminCourseListResponse]:
     """Get all courses with admin details"""
-    # Load courses with modules count and tags
     result = await session.execute(
         select(Course)
         .options(
@@ -110,7 +109,6 @@ async def get_course(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminCourseResponse:
     """Get course with all details"""
-    # Load course with all related data
     course = await session.scalar(
         select(Course)
         .options(
@@ -129,7 +127,6 @@ async def get_course(
             detail=api_messages.COURSE_NOT_FOUND,
         )
 
-    # Build modules with tests
     modules = []
     for module in sorted(course.modules, key=lambda m: m.position):
         test_responses = []
@@ -210,7 +207,6 @@ async def create_course(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminCourseResponse:
     """Create a new course"""
-    # Create course
     course = Course(
         title=course_data.title,
         description=course_data.description,
@@ -221,10 +217,8 @@ async def create_course(
     session.add(course)
     await session.flush()  # Get the course ID
 
-    # Add tags if provided
     if course_data.tag_ids:
         for tag_id in course_data.tag_ids:
-            # Verify tag exists
             tag = await session.scalar(select(Tag).where(Tag.unique_id == tag_id))
             if tag:
                 course_tag = CourseTag(course_id=course.unique_id, tag_id=tag_id)
@@ -232,7 +226,6 @@ async def create_course(
 
     await session.commit()
 
-    # Reload with all data
     await session.refresh(course)
     return await get_course(course.unique_id, current_admin, session)
 
@@ -250,7 +243,6 @@ async def update_course(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminCourseResponse:
     """Update an existing course"""
-    # Check if course exists
     course = await session.scalar(select(Course).where(Course.unique_id == course_id))
     if not course:
         raise HTTPException(
@@ -258,11 +250,9 @@ async def update_course(
             detail=api_messages.COURSE_NOT_FOUND,
         )
 
-    # Update fields if provided
     update_data = course_data.model_dump(exclude_unset=True)
     if "tag_ids" in update_data:
         tag_ids = update_data.pop("tag_ids")
-        # Handle tag updates separately
         await _update_course_tags(course_id, tag_ids, session)
 
     if update_data:
@@ -286,7 +276,6 @@ async def delete_course(
     session: AsyncSession = Depends(deps.get_session),
 ) -> None:
     """Delete a course"""
-    # Check if course exists
     course = await session.scalar(
         select(Course)
         .options(selectinload(Course.modules))
@@ -298,14 +287,12 @@ async def delete_course(
             detail=api_messages.COURSE_NOT_FOUND,
         )
 
-    # Check if course has modules
     if course.modules:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=api_messages.COURSE_HAS_MODULES,
         )
 
-    # Delete course
     await session.execute(delete(Course).where(Course.unique_id == course_id))
     await session.commit()
 
@@ -314,12 +301,9 @@ async def _update_course_tags(
     course_id: str, tag_ids: list[str], session: AsyncSession
 ) -> None:
     """Helper function to update course tags"""
-    # Delete existing tags
     await session.execute(delete(CourseTag).where(CourseTag.course_id == course_id))
 
-    # Add new tags
     for tag_id in tag_ids:
-        # Verify tag exists
         tag = await session.scalar(select(Tag).where(Tag.unique_id == tag_id))
         if tag:
             course_tag = CourseTag(course_id=course_id, tag_id=tag_id)

@@ -127,7 +127,6 @@ async def create_tag(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminTagResponse:
     """Create a new tag"""
-    # Check if tag already exists
     existing_tag = await session.scalar(
         select(Tag).where(Tag.content == tag_data.content)
     )
@@ -137,12 +136,10 @@ async def create_tag(
             detail=api_messages.TAG_ALREADY_EXISTS,
         )
 
-    # Create tag
     tag = Tag(content=tag_data.content)
     session.add(tag)
     await session.commit()
 
-    # Reload with all data
     await session.refresh(tag)
     return await get_tag(tag.unique_id, current_admin, session)
 
@@ -160,7 +157,6 @@ async def update_tag(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminTagResponse:
     """Update an existing tag"""
-    # Check if tag exists
     tag = await session.scalar(select(Tag).where(Tag.unique_id == tag_id))
     if not tag:
         raise HTTPException(
@@ -168,7 +164,6 @@ async def update_tag(
             detail=api_messages.TAG_NOT_FOUND,
         )
 
-    # Check if new content already exists (if updating content)
     if tag_data.content and tag_data.content != tag.content:
         existing_tag = await session.scalar(
             select(Tag).where(Tag.content == tag_data.content)
@@ -179,7 +174,6 @@ async def update_tag(
                 detail=api_messages.TAG_ALREADY_EXISTS,
             )
 
-    # Update fields if provided
     update_data = tag_data.model_dump(exclude_unset=True)
     if update_data:
         await session.execute(
@@ -202,7 +196,6 @@ async def delete_tag(
     session: AsyncSession = Depends(deps.get_session),
 ) -> None:
     """Delete a tag"""
-    # Check if tag exists
     tag = await session.scalar(
         select(Tag).options(selectinload(Tag.courses)).where(Tag.unique_id == tag_id)
     )
@@ -212,14 +205,12 @@ async def delete_tag(
             detail=api_messages.TAG_NOT_FOUND,
         )
 
-    # Check if tag has associated courses
     if tag.courses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot delete tag with associated courses",
         )
 
-    # Delete tag
     await session.execute(delete(Tag).where(Tag.unique_id == tag_id))
     await session.commit()
 
@@ -240,7 +231,6 @@ async def bulk_delete_tags(
     errors = []
 
     for tag_id in tag_ids:
-        # Check if tag exists
         tag = await session.scalar(
             select(Tag)
             .options(selectinload(Tag.courses))
@@ -251,13 +241,11 @@ async def bulk_delete_tags(
             errors.append(f"Tag {tag_id} not found")
             continue
 
-        # Check if tag has associated courses
         if tag.courses:
             error_count += 1
             errors.append(f"Tag {tag.content} has associated courses")
             continue
 
-        # Delete tag
         await session.execute(delete(Tag).where(Tag.unique_id == tag_id))
         success_count += 1
 

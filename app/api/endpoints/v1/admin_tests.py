@@ -66,7 +66,6 @@ async def get_test(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminTestResponse:
     """Get test with all details"""
-    # Load test with all related data
     test = await session.scalar(
         select(Test)
         .options(
@@ -82,7 +81,6 @@ async def get_test(
             detail=api_messages.TEST_NOT_FOUND,
         )
 
-    # Build questions with answer options
     questions = [
         AdminQuestionResponse(
             unique_id=question.unique_id,
@@ -123,7 +121,6 @@ async def get_module_test(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminTestResponse:
     """Get test for a module"""
-    # Load test with all related data
     test = await session.scalar(
         select(Test)
         .options(
@@ -138,7 +135,6 @@ async def get_module_test(
             detail="Module has no test",
         )
 
-    # Build questions with answer options
     questions = [
         AdminQuestionResponse(
             unique_id=question.unique_id,
@@ -184,7 +180,6 @@ async def create_test(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminTestResponse:
     """Create a new test"""
-    # Verify module exists
     module = await session.scalar(select(Module).where(Module.unique_id == module_id))
     if not module:
         raise HTTPException(
@@ -192,7 +187,6 @@ async def create_test(
             detail=api_messages.MODULE_NOT_FOUND,
         )
 
-    # Check if module already has a test
     existing_test = await session.scalar(
         select(Test).where(Test.module_id == module_id)
     )
@@ -202,7 +196,6 @@ async def create_test(
             detail="Module already has a test",
         )
 
-    # Create test
     test = Test(
         module_id=module_id,
         title=test_data.title,
@@ -211,7 +204,6 @@ async def create_test(
     session.add(test)
     await session.commit()
 
-    # Reload with all data
     await session.refresh(test)
     return await get_test(test.unique_id, current_admin, session)
 
@@ -229,7 +221,6 @@ async def update_test(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminTestResponse:
     """Update an existing test"""
-    # Check if test exists
     test = await session.scalar(select(Test).where(Test.unique_id == test_id))
     if not test:
         raise HTTPException(
@@ -237,7 +228,6 @@ async def update_test(
             detail=api_messages.TEST_NOT_FOUND,
         )
 
-    # Update fields if provided
     update_data = test_data.model_dump(exclude_unset=True)
     if update_data:
         await session.execute(
@@ -260,7 +250,6 @@ async def delete_test(
     session: AsyncSession = Depends(deps.get_session),
 ) -> None:
     """Delete a test"""
-    # Check if test exists
     test = await session.scalar(
         select(Test)
         .options(selectinload(Test.questions))
@@ -272,13 +261,11 @@ async def delete_test(
             detail=api_messages.TEST_NOT_FOUND,
         )
 
-    # Check if test has questions
     if test.questions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=api_messages.TEST_HAS_QUESTIONS,
         )
 
-    # Delete test
     await session.execute(delete(Test).where(Test.unique_id == test_id))
     await session.commit()

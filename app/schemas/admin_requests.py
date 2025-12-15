@@ -1,7 +1,6 @@
 from decimal import Decimal
-from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, JsonValue
 
 from app.models import UserRole
 
@@ -40,7 +39,7 @@ class ModuleCreateRequest(BaseAdminRequest):
     course_id: str
     title: str = Field(..., min_length=1, max_length=256)
     description: str | None = Field(None, max_length=10000)
-    content_json: dict[str, Any] | None = None
+    content_json: JsonValue | None = None
     position: int = Field(..., ge=0)
 
 
@@ -49,7 +48,7 @@ class ModuleUpdateRequest(BaseAdminRequest):
 
     title: str | None = Field(None, min_length=1, max_length=256)
     description: str | None = Field(None, max_length=10000)
-    content_json: dict[str, Any] | None = None
+    content_json: JsonValue | None = None
     position: int | None = Field(None, ge=0)
 
 

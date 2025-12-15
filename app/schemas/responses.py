@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
@@ -84,3 +85,63 @@ class ModuleTestStatusResponse(BaseResponse):
     has_test: bool
     completed: bool
     completed_at: datetime | None = None
+
+
+class TagResponse(BaseResponse):
+    """Tag response for courses"""
+
+    unique_id: str
+    content: str
+
+
+class ModuleResponse(BaseResponse):
+    """Module response for courses"""
+
+    unique_id: str
+    course_id: str
+    title: str
+    description: str | None = None
+    position: int
+
+
+class CourseListResponse(BaseResponse):
+    """Course list response"""
+
+    unique_id: str
+    title: str
+    description: str | None = None
+    price: Decimal
+    img_id: str | None = None
+    modules_count: int
+    tags: list[TagResponse] = []
+    is_active: bool
+
+
+class CourseDetailResponse(BaseResponse):
+    """Course detail response"""
+
+    unique_id: str
+    title: str
+    description: str | None = None
+    price: Decimal
+    img_id: str | None = None
+    modules: list[ModuleResponse] = []
+    tags: list[TagResponse] = []
+    is_active: bool
+
+
+class CourseListResponseV2(CourseListResponse):
+    """Course list response"""
+
+    user_discount: int | None = None
+    final_price: Decimal
+    is_purchased: bool
+
+
+class CourseDetailResponseV2(CourseDetailResponse):
+    """Course detail response"""
+
+    user_discount: int | None = None
+    final_price: Decimal
+    is_purchased: bool
+    completion_percentage: float | None = None

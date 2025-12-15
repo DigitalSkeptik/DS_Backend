@@ -117,7 +117,6 @@ async def update_user_role(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminUserResponse:
     """Update a user's role"""
-    # Check if user exists
     user = await session.scalar(select(User).where(User.unique_id == user_id))
     if not user:
         raise HTTPException(
@@ -132,13 +131,11 @@ async def update_user_role(
             detail="Cannot change your own role",
         )
 
-    # Update user role
     await session.execute(
         update(User).where(User.unique_id == user_id).values(role=role_data.role)
     )
     await session.commit()
 
-    # Reload user data
     await session.refresh(user)
     return AdminUserResponse(
         unique_id=user.unique_id,
@@ -162,7 +159,6 @@ async def get_stats(
     """Get platform statistics"""
     from sqlalchemy import func
 
-    # Count users by role
     admin_users_result = await session.scalar(
         select(func.count(User.unique_id)).where(User.role == UserRole.ADMIN)
     )
@@ -170,7 +166,6 @@ async def get_stats(
         select(func.count(User.unique_id)).where(User.role == UserRole.USER)
     )
 
-    # Count other entities
     total_courses_result = await session.scalar(select(func.count(Course.unique_id)))
     active_courses_result = await session.scalar(
         select(func.count(Course.unique_id)).where(Course.is_active)
@@ -205,7 +200,6 @@ async def get_user_courses(
     session: AsyncSession = Depends(deps.get_session),
 ) -> list[dict]:
     """Get courses purchased by a user"""
-    # Check if user exists
     user = await session.scalar(select(User).where(User.unique_id == user_id))
     if not user:
         raise HTTPException(
@@ -213,7 +207,6 @@ async def get_user_courses(
             detail=api_messages.USER_NOT_FOUND,
         )
 
-    # Load user with purchased courses
     user_with_courses = await session.scalar(
         select(User)
         .options(
@@ -250,7 +243,6 @@ async def get_user_progress(
     session: AsyncSession = Depends(deps.get_session),
 ) -> dict:
     """Get user's course progress"""
-    # Check if user exists
     user = await session.scalar(select(User).where(User.unique_id == user_id))
     if not user:
         raise HTTPException(
@@ -258,7 +250,6 @@ async def get_user_progress(
             detail=api_messages.USER_NOT_FOUND,
         )
 
-    # Load user with completed courses and modules
     user_with_progress = await session.scalar(
         select(User)
         .options(

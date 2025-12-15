@@ -97,7 +97,6 @@ async def get_module_test(
     module: Module = Depends(deps.get_module_with_access_check),
     session: AsyncSession = Depends(deps.get_session),
 ) -> TestResponse:
-    # Load test with questions and answer options
     test = await session.scalar(
         select(Test)
         .options(selectinload(Test.questions).selectinload(Question.answer_options))
@@ -110,11 +109,9 @@ async def get_module_test(
             detail=api_messages.TEST_MODULE_HAS_NO_TEST,
         )
 
-    # Randomize question order
     questions = list(test.questions)
     random.shuffle(questions)
 
-    # Build response (without is_correct and explanation)
     return TestResponse(
         test_id=test.unique_id,
         module_id=test.module_id,
@@ -148,7 +145,6 @@ async def check_single_answer(
     current_user: User = Depends(deps.get_current_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> QuestionResultResponse:
-    # Load test with related data
     test = await session.scalar(
         select(Test)
         .options(
@@ -163,7 +159,6 @@ async def check_single_answer(
             detail=api_messages.TEST_NOT_FOUND,
         )
 
-    # Verify access
     has_access = await deps.verify_course_access(
         test.module.course_id, current_user, session
     )
@@ -173,7 +168,6 @@ async def check_single_answer(
             detail=api_messages.TEST_ACCESS_DENIED,
         )
 
-    # Validate that question belongs to this test
     question = next(
         (q for q in test.questions if q.unique_id == data.question_id), None
     )
@@ -183,7 +177,6 @@ async def check_single_answer(
             detail=api_messages.TEST_INVALID_SUBMISSION,
         )
 
-    # Validate selected option belongs to this question
     selected_option = next(
         (o for o in question.answer_options if o.unique_id == data.selected_option_id),
         None,
@@ -194,7 +187,6 @@ async def check_single_answer(
             detail=api_messages.TEST_INVALID_OPTION,
         )
 
-    # Find correct option
     correct_option = next((o for o in question.answer_options if o.is_correct), None)
     is_correct = bool(selected_option.is_correct)
 
@@ -225,7 +217,6 @@ async def submit_test(
     current_user: User = Depends(deps.get_current_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> TestSubmissionResponse:
-    # Load test with all related data
     test = await session.scalar(
         select(Test)
         .options(
@@ -240,7 +231,6 @@ async def submit_test(
             status_code=status.HTTP_404_NOT_FOUND, detail=api_messages.TEST_NOT_FOUND
         )
 
-    # Verify access to course
     has_access = await deps.verify_course_access(
         test.module.course_id, current_user, session
     )
@@ -250,7 +240,6 @@ async def submit_test(
             detail=api_messages.TEST_ACCESS_DENIED,
         )
 
-    # Validate submission
     question_ids = {q.unique_id for q in test.questions}
     submitted_ids = {ans.question_id for ans in submission.answers}
 
@@ -260,17 +249,14 @@ async def submit_test(
             detail=api_messages.TEST_INVALID_SUBMISSION,
         )
 
-    # Build answer map for quick lookup
     answer_map = {ans.question_id: ans.selected_option_id for ans in submission.answers}
 
-    # Score the test
     results = []
     correct_count = 0
 
     for question in test.questions:
         selected_id = answer_map[question.unique_id]
 
-        # Find selected option and correct option
         selected_option = next(
             o for o in question.answer_options if o.unique_id == selected_id
         )
@@ -300,15 +286,12 @@ async def submit_test(
             )
         )
 
-    # Calculate score
     total_questions = len(test.questions)
     score_percentage = (correct_count / total_questions) * 100
     passed = score_percentage >= PASSING_THRESHOLD
 
-    # Mark module as completed if passed
     module_completed = False
     if passed:
-        # Check if already completed
         existing = await session.scalar(
             select(CompletedModule).where(
                 CompletedModule.user_id == current_user.unique_id,
@@ -346,12 +329,10 @@ async def get_module_test_status(
     current_user: User = Depends(deps.get_current_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> ModuleTestStatusResponse:
-    # Check if module has a test
     test = await session.scalar(select(Test).where(Test.module_id == module_id))
 
     has_test = test is not None
 
-    # Check completion
     completed_module = await session.scalar(
         select(CompletedModule).where(
             CompletedModule.user_id == current_user.unique_id,
