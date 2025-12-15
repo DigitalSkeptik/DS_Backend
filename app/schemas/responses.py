@@ -145,3 +145,17 @@ class CourseDetailResponseV2(CourseDetailResponse):
     final_price: Decimal
     is_purchased: bool
     completion_percentage: float | None = None
+
+
+class ModuleDetailResponse(BaseResponse):
+    """Module detail response with content for users who purchased the course"""
+
+    unique_id: str
+    course_id: str
+    title: str
+    description: str | None = None
+    content_json: dict | None = None
+    position: int
+    is_completed: bool = False
+    has_test: bool = False
+    test_completed: bool = False

@@ -138,12 +138,6 @@ async def get_course(
             detail=api_messages.COURSE_NOT_FOUND,
         )
 
-    purchase = await session.scalar(
-        select(PurchasedCourse).where(
-            PurchasedCourse.user_id == current_user.unique_id,
-            PurchasedCourse.course_id == course_id,
-        )
-    )
     is_purchased = False
     completion_percentage = None
     user_discount = None
