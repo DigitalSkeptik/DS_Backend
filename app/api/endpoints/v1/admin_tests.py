@@ -169,7 +169,9 @@ async def get_module_test(
     status_code=status.HTTP_201_CREATED,
     responses={
         404: {"description": "Module not found"},
-        400: {"description": "Module already has a test"},
+        400: {
+            "description": "Module already has a test. Although we technically support multiple tests per module, right now we only allow one."
+        },
     },
     description="Create a new test for a module",
 )

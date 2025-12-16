@@ -47,7 +47,7 @@ COURSE_RESPONSES: dict[int | str, dict[str, Any]] = {
 
 
 @router.get(
-    "/courses",
+    "",
     response_model=list[AdminCourseListResponse],
     description="Get all courses (admin view)",
 )
@@ -98,7 +98,7 @@ async def get_all_courses(
 
 
 @router.get(
-    "/courses/{course_id}",
+    "/{course_id}",
     response_model=AdminCourseResponse,
     responses=COURSE_RESPONSES,
     description="Get course by ID (admin view)",
@@ -196,7 +196,7 @@ async def get_course(
 
 
 @router.post(
-    "/courses",
+    "",
     response_model=AdminCourseResponse,
     status_code=status.HTTP_201_CREATED,
     description="Create a new course",
@@ -231,7 +231,7 @@ async def create_course(
 
 
 @router.put(
-    "/courses/{course_id}",
+    "/{course_id}",
     response_model=AdminCourseResponse,
     responses=COURSE_RESPONSES,
     description="Update a course",
@@ -265,7 +265,7 @@ async def update_course(
 
 
 @router.delete(
-    "/courses/{course_id}",
+    "/{course_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses=COURSE_RESPONSES,
     description="Delete a course",

@@ -129,7 +129,9 @@ async def login_access_token(
     responses=REFRESH_TOKEN_RESPONSES,
     description="OAuth2 compatible token, get an access token for future requests using refresh token",
 )
+@limiter.limit("1/hour")
 async def refresh_token(
+    request: Request,
     data: RefreshTokenRequest,
     response: Response,
     session: AsyncSession = Depends(deps.get_session),

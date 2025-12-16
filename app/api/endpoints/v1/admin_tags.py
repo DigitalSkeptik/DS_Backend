@@ -42,7 +42,7 @@ TAG_RESPONSES: dict[int | str, dict[str, Any]] = {
 
 
 @router.get(
-    "/tags",
+    "",
     response_model=list[AdminTagResponse],
     description="Get all tags (admin view)",
 )
@@ -76,7 +76,7 @@ async def get_all_tags(
 
 
 @router.get(
-    "/tags/{tag_id}",
+    "/{tag_id}",
     response_model=AdminTagResponse,
     responses=TAG_RESPONSES,
     description="Get tag by ID (admin view)",
@@ -106,7 +106,7 @@ async def get_tag(
 
 
 @router.post(
-    "/tags",
+    "",
     response_model=AdminTagResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
@@ -145,7 +145,7 @@ async def create_tag(
 
 
 @router.put(
-    "/tags/{tag_id}",
+    "/{tag_id}",
     response_model=AdminTagResponse,
     responses=TAG_RESPONSES,
     description="Update a tag",
@@ -185,7 +185,7 @@ async def update_tag(
 
 
 @router.delete(
-    "/tags/{tag_id}",
+    "/{tag_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses=TAG_RESPONSES,
     description="Delete a tag",
@@ -216,7 +216,7 @@ async def delete_tag(
 
 
 @router.post(
-    "/tags/bulk-delete",
+    "/bulk-delete",
     response_model=AdminBulkOperationResponse,
     description="Delete multiple tags",
 )

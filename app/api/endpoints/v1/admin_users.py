@@ -37,7 +37,7 @@ USER_RESPONSES: dict[int | str, dict[str, Any]] = {
 
 
 @router.get(
-    "/users",
+    "",
     response_model=list[AdminUserListResponse],
     description="Get all users (admin view)",
 )
@@ -75,7 +75,7 @@ async def get_all_users(
 
 
 @router.get(
-    "/users/{user_id}",
+    "/{user_id}",
     response_model=AdminUserResponse,
     responses=USER_RESPONSES,
     description="Get user by ID (admin view)",
@@ -105,7 +105,7 @@ async def get_user(
 
 
 @router.put(
-    "/users/{user_id}/role",
+    "/{user_id}/role",
     response_model=AdminUserResponse,
     responses=USER_RESPONSES,
     description="Update a user's role",
@@ -189,7 +189,7 @@ async def get_stats(
 
 
 @router.get(
-    "/users/{user_id}/courses",
+    "/{user_id}/courses",
     response_model=list[dict],
     responses=USER_RESPONSES,
     description="Get courses purchased by a user",
@@ -232,7 +232,7 @@ async def get_user_courses(
 
 
 @router.get(
-    "/users/{user_id}/progress",
+    "/{user_id}/progress",
     response_model=dict,
     responses=USER_RESPONSES,
     description="Get user's course progress",

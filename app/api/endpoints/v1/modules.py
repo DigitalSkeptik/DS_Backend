@@ -41,7 +41,7 @@ MODULE_RESPONSES: dict[int | str, dict[str, Any]] = {
 
 
 @router.get(
-    "/courses/{course_id}/modules",
+    "/courses/{course_id}",
     response_model=list[ModuleResponse],
     responses={404: {"description": "Course not found"}},
     description="Get all modules for a course (basic info)",
@@ -78,7 +78,7 @@ async def get_course_modules(
 
 
 @router.get(
-    "/modules/{module_id}",
+    "/{module_id}",
     response_model=ModuleDetailResponse,
     responses=MODULE_RESPONSES,
     description="Get module by ID with full content (requires course purchase)",
