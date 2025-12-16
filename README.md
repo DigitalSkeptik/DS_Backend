@@ -34,6 +34,14 @@ uvicorn app.main:app --reload
 ```
 
 
+## Versioning
+
+API has two versions at this moment, `/v1` and `/v2`. Both versions expose Swagger and Redoc docs, e.g. `/v1/docs` for Swagger of API v1, and `/v2/redoc` for Redoc of API v2.
+
+## Authentication
+
+API uses JWT tokens with refresh tokens for authentication. It is used since our this API is designed only for one first party client, so we can just do authentication on our own. Another concern is that we need to pass user session data to billing (mock) service, so it is nore convenient to use tokens for this task.
+
 ### DEV
 #### Making migrations
 ```bash

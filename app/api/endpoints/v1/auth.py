@@ -2,13 +2,14 @@ import secrets
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import api_messages, deps
 from app.core.config import get_settings
+from app.core.limiter import limiter
 from app.core.security.jwt import create_jwt_token
 from app.core.security.password import (
     DUMMY_PASSWORD,
@@ -70,15 +71,16 @@ REFRESH_TOKEN_RESPONSES: dict[int | str, dict[str, Any]] = {
     responses=ACCESS_TOKEN_RESPONSES,
     description="OAuth2 compatible token, get an access token for future requests using username and password",
 )
+@limiter.limit("10/hour")
 async def login_access_token(
-    form_data: UserLoginRequest,
+    request: Request,
     response: Response,
+    form_data: UserLoginRequest,
     session: AsyncSession = Depends(deps.get_session),
 ) -> AccessTokenResponse:
     user = await session.scalar(select(User).where(User.email == form_data.email))
 
     if user is None:
-        # this is naive method to not return early
         verify_password(form_data.password, DUMMY_PASSWORD)
 
         raise HTTPException(
@@ -102,7 +104,6 @@ async def login_access_token(
     session.add(refresh_token)
     await session.commit()
 
-    # Set HttpOnly cookie with access token
     response.set_cookie(
         key="access_token",
         value=jwt_token.access_token,
@@ -114,7 +115,6 @@ async def login_access_token(
         path="/",
     )
 
-    # Keep response body for backward compatibility (frontend may still read it)
     return AccessTokenResponse(
         access_token=jwt_token.access_token,
         expires_at=jwt_token.payload.exp,
@@ -129,7 +129,9 @@ async def login_access_token(
     responses=REFRESH_TOKEN_RESPONSES,
     description="OAuth2 compatible token, get an access token for future requests using refresh token",
 )
+@limiter.limit("1/hour")
 async def refresh_token(
+    request: Request,
     data: RefreshTokenRequest,
     response: Response,
     session: AsyncSession = Depends(deps.get_session),
@@ -177,12 +179,11 @@ async def refresh_token(
     session.add(refresh_token)
     await session.commit()
 
-    # Rotate access token cookie
     response.set_cookie(
         key="access_token",
         value=jwt_token.access_token,
         httponly=True,
-        secure=True,  # consider False for local HTTP dev if needed
+        secure=True,
         samesite="lax",  # set to "none" if cross-site cookies are required (requires HTTPS)
         max_age=get_settings().security.jwt_access_token_expire_secs,
         expires=jwt_token.payload.exp,

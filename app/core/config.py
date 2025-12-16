@@ -35,6 +35,11 @@ class Security(BaseModel):
     backend_cors_origins: list[AnyHttpUrl] = []
 
 
+class RateLimit(BaseModel):
+    enabled: bool = True
+    requests_per_minute: int = 60
+
+
 class Database(BaseModel):
     hostname: str = "postgres"
     username: str = "postgres"
@@ -46,6 +51,7 @@ class Database(BaseModel):
 class Settings(BaseSettings):
     security: Security = Field(default_factory=Security)
     database: Database = Field(default_factory=Database)
+    rate_limit: RateLimit = Field(default_factory=RateLimit)
     log_level: str = "INFO"
 
     @computed_field  # type: ignore[prop-decorator]

@@ -16,6 +16,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
@@ -34,6 +35,11 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     pass
+
+
+class UserRole(str, Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 
 class Base(DeclarativeBase):
@@ -60,6 +66,9 @@ class User(Base):
     pass_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     username: Mapped[str] = mapped_column(
         String(256), nullable=False, unique=False, index=True
+    )
+    role: Mapped[UserRole] = mapped_column(
+        String(50), nullable=False, default=UserRole.USER
     )
 
     # Relationships
