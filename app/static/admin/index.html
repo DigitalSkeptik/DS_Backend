@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - DigitalSkeptik</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <div class="login-card">
+                <h1>Admin Panel</h1>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+                <div id="login-error" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Admin Panel -->
+    <div id="admin-panel" class="screen hidden">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1>Admin Panel</h1>
+                <div class="header-actions">
+                    <span id="user-email" class="user-email"></span>
+                    <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="courses">Courses</button>
+            <button class="tab-btn" data-tab="modules">Modules</button>
+            <button class="tab-btn" data-tab="users">Users</button>
+        </nav>
+
+        <!-- Tab Content -->
+        <main class="tab-content">
+            <!-- Courses Tab -->
+            <div id="courses-tab" class="tab-pane active">
+                <div class="tab-header">
+                    <h2>Courses Management</h2>
+                    <button id="add-course-btn" class="btn btn-primary">Add Course</button>
+                </div>
+                
+                <div class="content-section">
+                    <div id="courses-list" class="data-list">
+                        <div class="loading">Loading courses...</div>
+                    </div>
+                </div>
+
+                <!-- Course Form Modal -->
+                <div id="course-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="course-modal-title">Add Course</h3>
+                            <button class="close-btn">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="course-form">
+                                <div class="form-group">
+                                    <label for="course-title">Title</label>
+                                    <input type="text" id="course-title" name="title" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="course-description">Description</label>
+                                    <textarea id="course-description" name="description" rows="4"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="course-price">Price</label>
+                                    <input type="number" id="course-price" name="price" step="0.01" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="course-img-id">Image ID</label>
+                                    <input type="text" id="course-img-id" name="img_id">
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="course-is-active" name="is_active" checked>
+                                        Active
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label for="course-tags">Tags</label>
+                                    <select id="course-tags" name="tag_ids" multiple>
+                                        <!-- Tags will be populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modules Tab -->
+            <div id="modules-tab" class="tab-pane">
+                <div class="tab-header">
+                    <h2>Modules Management</h2>
+                    <div class="tab-controls">
+                        <select id="course-selector" class="course-selector">
+                            <option value="">Select a course...</option>
+                        </select>
+                        <button id="add-module-btn" class="btn btn-primary" disabled>Add Module</button>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <div id="modules-list" class="data-list">
+                        <div class="placeholder">Select a course to view modules</div>
+                    </div>
+                </div>
+
+                <!-- Module Form Modal -->
+                <div id="module-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="module-modal-title">Add Module</h3>
+                            <button class="close-btn">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="module-form">
+                                <div class="form-group">
+                                    <label for="module-title">Title</label>
+                                    <input type="text" id="module-title" name="title" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="module-description">Description</label>
+                                    <textarea id="module-description" name="description" rows="4"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="module-position">Position</label>
+                                    <input type="number" id="module-position" name="position" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="module-content">Content (JSON)</label>
+                                    <textarea id="module-content" name="content_json" rows="8" placeholder='{"key": "value"}'></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Management Section -->
+                <div id="test-section" class="test-section hidden">
+                    <div class="section-header">
+                        <h3>Test Management</h3>
+                        <button id="add-test-btn" class="btn btn-primary">Add Test</button>
+                    </div>
+                    <div id="test-content">
+                        <!-- Test content will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="users-tab" class="tab-pane">
+                <div class="tab-header">
+                    <h2>Users Management</h2>
+                    <div class="tab-controls">
+                        <select id="role-filter" class="role-filter">
+                            <option value="">All Roles</option>
+                            <option value="user">Users</option>
+                            <option value="admin">Admins</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <div id="users-list" class="data-list">
+                        <div class="loading">Loading users...</div>
+                    </div>
+                </div>
+
+                <!-- User Role Modal -->
+                <div id="user-role-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Update User Role</h3>
+                            <button class="close-btn">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="user-role-form">
+                                <div class="form-group">
+                                    <label for="user-email-display">Email</label>
+                                    <input type="text" id="user-email-display" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="user-role">Role</label>
+                                    <select id="user-role" name="role" required>
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Error Toast -->
+        <div id="error-toast" class="toast error-toast hidden">
+            <span id="error-message"></span>
+            <button class="toast-close">&times;</button>
+        </div>
+
+        <!-- Success Toast -->
+        <div id="success-toast" class="toast success-toast hidden">
+            <span id="success-message"></span>
+            <button class="toast-close">&times;</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/courses.js"></script>
+    <script src="js/modules.js"></script>
+    <script src="js/users.js"></script>
+    <script src="js/tests.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

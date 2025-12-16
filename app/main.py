@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -51,6 +52,7 @@ v2_app.add_middleware(SlowAPIMiddleware)
 
 app.mount("/api/v1", v1_app)
 app.mount("/api/v2", v2_app)
+app.mount("/admin", StaticFiles(directory="app/static/admin", html=True), name="admin")
 
 # Sets all CORS enabled origins
 
