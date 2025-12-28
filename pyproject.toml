@@ -64,4 +64,4 @@ select = ["E", "F", "I", "PL", "UP", "W"]
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore magic value comparisons in tests
-"app/tests/**/*.py" = ["PLR2004"]
+"app/tests/**/*.py" = ["PLR2004", "PLC0415"]
