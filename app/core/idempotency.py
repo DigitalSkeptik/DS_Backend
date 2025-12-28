@@ -1,5 +1,6 @@
 import hashlib
 import json
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -118,10 +119,15 @@ async def check_body_hash_mismatch(
 class IdempotencyMiddleware:
     """Middleware to handle idempotency for POST operations"""
 
-    def __init__(self, app):
+    def __init__(self, app: Any) -> None:  # type: ignore[no-untyped-def]
         self.app = app
 
-    async def __call__(self, scope, receive, send):  # noqa: PLR0912, PLR0915
+    async def __call__(  # noqa: PLR0912, PLR0915
+        self,
+        scope: dict[str, Any],
+        receive: Callable[..., Any],
+        send: Callable[..., Any],
+    ) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
@@ -179,7 +185,7 @@ class IdempotencyMiddleware:
         # Now we need to replay the body to the application
         body_sent = False
 
-        async def receive_wrapper():
+        async def receive_wrapper() -> dict[str, Any]:
             nonlocal body_sent
             if not body_sent:
                 body_sent = True
@@ -192,9 +198,9 @@ class IdempotencyMiddleware:
             return {"type": "http.disconnect"}
 
         original_send = send
-        response_data = {"status": None, "body": b"", "headers": []}
+        response_data: dict[str, Any] = {"status": None, "body": b"", "headers": []}
 
-        async def send_wrapper(message):
+        async def send_wrapper(message: dict[str, Any]) -> None:
             if message["type"] == "http.response.start":
                 response_data["status"] = message["status"]
                 response_data["headers"] = message.get("headers", [])
@@ -211,16 +217,16 @@ class IdempotencyMiddleware:
                 try:
                     # Parse response body as JSON if possible
                     try:
-                        response_body = json.loads(response_data["body"].decode())
+                        response_body = json.loads(response_data["body"].decode())  # type: ignore[union-attr]
                     except (json.JSONDecodeError, UnicodeDecodeError):
-                        response_body = {"raw_response": response_data["body"].decode()}
+                        response_body = {"raw_response": response_data["body"].decode()}  # type: ignore[union-attr]
 
                     await store_idempotency_response(
                         idempotency_key=idempotency_key,
                         request_path=scope["path"],
                         request_method=scope["method"],
                         request_body=request_body,
-                        response_status=response_data["status"],
+                        response_status=response_data["status"],  # type: ignore[arg-type]
                         response_body=response_body,
                         session=session,
                     )
@@ -228,7 +234,9 @@ class IdempotencyMiddleware:
                     # If storing fails, it's not critical
                     pass
 
-    async def _send_error_response(self, send, status_code: int, body: dict):
+    async def _send_error_response(
+        self, send: Callable[..., Any], status_code: int, body: dict[str, Any]
+    ) -> None:  # type: ignore[type-arg]
         """Send error response"""
         body_json = json.dumps(body).encode()
         await send(
@@ -248,7 +256,9 @@ class IdempotencyMiddleware:
             }
         )
 
-    async def _send_cached_response(self, send, cached_response: dict):
+    async def _send_cached_response(
+        self, send: Callable[..., Any], cached_response: dict[str, Any]
+    ) -> None:  # type: ignore[type-arg]
         """Send cached response"""
         body_json = json.dumps(cached_response["body"]).encode()
         await send(

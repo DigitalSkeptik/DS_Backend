@@ -165,7 +165,7 @@ class ModuleDetailResponse(BaseResponse):
     course_id: str
     title: str
     description: str | None = None
-    content_json: dict | None = None
+    content_json: dict | None = None  # type: ignore[type-arg]
     position: int
     is_completed: bool = False
     has_test: bool = False

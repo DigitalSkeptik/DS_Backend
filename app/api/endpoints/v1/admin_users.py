@@ -188,7 +188,7 @@ async def get_stats(
 
 @router.get(
     "/{user_id}/courses",
-    response_model=list[dict],
+    response_model=list[dict[str, Any]],  # type: ignore[type-arg]
     responses=USER_RESPONSES,
     summary="Получить купленные курсы пользователя",
 )
@@ -196,7 +196,7 @@ async def get_user_courses(
     user_id: str,
     current_admin: User = Depends(deps.get_current_admin_user),
     session: AsyncSession = Depends(deps.get_session),
-) -> list[dict]:
+) -> list[dict[str, Any]]:  # type: ignore[type-arg]
     """Get courses purchased by a user"""
     user = await session.scalar(select(User).where(User.unique_id == user_id))
     if not user:
@@ -231,7 +231,7 @@ async def get_user_courses(
 
 @router.get(
     "/{user_id}/progress",
-    response_model=dict,
+    response_model=dict[str, Any],  # type: ignore[type-arg]
     responses=USER_RESPONSES,
     summary="Получить прогресс пользователя",
 )
@@ -239,7 +239,7 @@ async def get_user_progress(
     user_id: str,
     current_admin: User = Depends(deps.get_current_admin_user),
     session: AsyncSession = Depends(deps.get_session),
-) -> dict:
+) -> dict[str, Any]:  # type: ignore[type-arg]
     """Get user's course progress"""
     user = await session.scalar(select(User).where(User.unique_id == user_id))
     if not user:
@@ -274,14 +274,14 @@ async def get_user_progress(
                 )
 
         if user_with_progress.completed_modules:
-            for completed in user_with_progress.completed_modules:
+            for completed_module in user_with_progress.completed_modules:
                 completed_modules.append(
                     {
-                        "module_id": completed.module.unique_id,
-                        "module_title": completed.module.title,
-                        "course_id": completed.module.course.unique_id,
-                        "course_title": completed.module.course.title,
-                        "completion_date": completed.create_time,
+                        "module_id": completed_module.module.unique_id,
+                        "module_title": completed_module.module.title,
+                        "course_id": completed_module.module.course.unique_id,
+                        "course_title": completed_module.module.course.title,
+                        "completion_date": completed_module.create_time,
                     }
                 )
 
