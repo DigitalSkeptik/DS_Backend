@@ -16,6 +16,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
@@ -34,6 +35,11 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     pass
+
+
+class UserRole(str, Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 
 class Base(DeclarativeBase):
@@ -60,6 +66,9 @@ class User(Base):
     pass_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     username: Mapped[str] = mapped_column(
         String(256), nullable=False, unique=False, index=True
+    )
+    role: Mapped[UserRole] = mapped_column(
+        String(50), nullable=False, default=UserRole.USER
     )
 
     # Relationships
@@ -339,3 +348,20 @@ class CourseTag(Base):
     # Relationships
     course: Mapped["Course"] = relationship(back_populates="tags")
     tag: Mapped["Tag"] = relationship(back_populates="courses")
+
+
+class IdempotencyKey(Base):
+    __tablename__ = "idempotency_key"
+
+    key: Mapped[str] = mapped_column(String(255), primary_key=True, nullable=False)
+    request_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    request_method: Mapped[str] = mapped_column(String(10), nullable=False)
+    request_body_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    response_status: Mapped[int] = mapped_column(nullable=False)
+    response_body: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )

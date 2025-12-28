@@ -33,6 +33,12 @@ class Security(BaseModel):
     password_bcrypt_rounds: int = 12
     allowed_hosts: list[str] = ["localhost", "127.0.0.1"]
     backend_cors_origins: list[AnyHttpUrl] = []
+    internal_api_key: SecretStr = SecretStr("internal-api-key-change-me")
+
+
+class RateLimit(BaseModel):
+    enabled: bool = True
+    requests_per_minute: int = 60
 
 
 class Database(BaseModel):
@@ -46,6 +52,7 @@ class Database(BaseModel):
 class Settings(BaseSettings):
     security: Security = Field(default_factory=Security)
     database: Database = Field(default_factory=Database)
+    rate_limit: RateLimit = Field(default_factory=RateLimit)
     log_level: str = "INFO"
 
     @computed_field  # type: ignore[prop-decorator]

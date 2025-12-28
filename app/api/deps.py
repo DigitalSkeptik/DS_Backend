@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.api import api_messages
 from app.core import database_session
 from app.core.security.jwt import verify_jwt_token
-from app.models import Course, Module, PurchasedCourse, User
+from app.models import Course, Module, PurchasedCourse, User, UserRole
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:
@@ -57,6 +57,28 @@ async def get_current_user(
         )
     print(f"DEBUG: User found: {user.email}")
     return user
+
+
+async def get_current_user_optional(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> User | None:
+    """
+    Returns the current user if authenticated, otherwise returns None.
+    Does not raise HTTPException for missing credentials.
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        return None
+
+    try:
+        token_payload = verify_jwt_token(token)
+        user = await session.scalar(
+            select(User).where(User.unique_id == token_payload.sub)
+        )
+        return user
+    except Exception:
+        return None
 
 
 async def verify_course_access(
@@ -108,3 +130,15 @@ async def get_module_with_access_check(
         )
 
     return module
+
+
+async def get_current_admin_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Get current user and verify they have admin role"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return current_user
