@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
+from app.core.security.password import get_password_hash
 from app.models import User
 
 
@@ -40,17 +41,17 @@ async def verify_api_key(
     # For internal APIs, we'll use a system admin user
     # In production, you might want to associate API keys with specific service accounts
     system_user = await session.scalar(
-        select(User).where(User.email == "system@internal.local")
+        select(User).where(User.email == "system@internal.com")
     )
 
     if not system_user:
         # Create a system user if it doesn't exist
-        from app.core.security.password import get_password_hash
-
         system_user = User(
-            email="system@internal.local",
+            email="system@internal.com",
             username="system",
-            pass_hash=get_password_hash("system_password"),
+            pass_hash=get_password_hash(
+                get_settings().security.jwt_secret_key.get_secret_value()
+            ),
             role="admin",
         )
         session.add(system_user)

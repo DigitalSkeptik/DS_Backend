@@ -1,8 +1,6 @@
-from typing import Any, TypeVar, get_type_hints
+from typing import Any, get_type_hints
 
 from pydantic import BaseModel
-
-T = TypeVar("T", bound=BaseModel)
 
 
 def parse_fields_param(fields: str | None) -> set[str]:
@@ -15,7 +13,7 @@ def parse_fields_param(fields: str | None) -> set[str]:
     return {field.strip() for field in fields.split(",") if field.strip()}
 
 
-def get_required_fields(model_class: type[T]) -> set[str]:
+def get_required_fields[T: BaseModel](model_class: type[T]) -> set[str]:
     model_fields = model_class.model_fields
     required_fields = {
         name for name, field in model_fields.items() if field.is_required()
@@ -23,7 +21,7 @@ def get_required_fields(model_class: type[T]) -> set[str]:
     return required_fields
 
 
-def get_minimal_fields(model_class: type[T]) -> set[str]:
+def get_minimal_fields[T: BaseModel](model_class: type[T]) -> set[str]:
     required = get_required_fields(model_class)
 
     minimal_optional = {
@@ -42,7 +40,7 @@ def get_minimal_fields(model_class: type[T]) -> set[str]:
     return required.union(optional)
 
 
-def get_fields_to_return(
+def get_fields_to_return[T: BaseModel](
     requested_fields: set[str],
     model_class: type[T],
 ) -> set[str]:
@@ -63,7 +61,7 @@ def get_fields_to_return(
     return requested_fields.union(required_fields)
 
 
-def filter_model_fields(
+def filter_model_fields[T: BaseModel](
     model: T,
     fields: set[str],
     model_class: type[T] | None = None,
@@ -86,7 +84,7 @@ def filter_model_fields(
     return filtered_dict
 
 
-def filter_list_of_models(
+def filter_list_of_models[T: BaseModel](
     models: list[T],
     fields: set[str],
     model_class: type[T] | None = None,
@@ -97,7 +95,7 @@ def filter_list_of_models(
     return [filter_model_fields(model, fields, model_class) for model in models]
 
 
-def validate_fields(
+def validate_fields[T: BaseModel](
     fields: set[str],
     model_class: type[T],
 ) -> set[str]:

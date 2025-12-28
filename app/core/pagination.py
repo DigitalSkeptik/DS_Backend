@@ -1,9 +1,6 @@
 from math import ceil
-from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
-
-T = TypeVar("T")
 
 # Constants for pagination
 MAX_PAGE_SIZE = 1000
@@ -20,7 +17,7 @@ class PaginationMeta(BaseModel):
     has_prev: bool = Field(..., description="Whether there is a previous page")
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     """Generic paginated response"""
 
     items: list[T] = Field(..., description="List of items")
@@ -65,7 +62,7 @@ def get_pagination_params(
     return offset, page_size
 
 
-def create_paginated_response(
+def create_paginated_response[T](
     items: list[T],
     total: int,
     page: int,

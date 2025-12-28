@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -157,8 +157,6 @@ async def get_stats(
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminStatsResponse:
     """Get platform statistics"""
-    from sqlalchemy import func
-
     admin_users_result = await session.scalar(
         select(func.count(User.unique_id)).where(User.role == UserRole.ADMIN)
     )
