@@ -3,6 +3,7 @@ import os
 import uuid
 from collections.abc import AsyncGenerator, Callable
 from typing import Any, Dict, Optional
+from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -15,6 +16,7 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core import database_session
 from app.core.config import get_settings
+from app.core.limiter import limiter
 from app.core.security.jwt import create_jwt_token
 from app.core.security.password import get_password_hash
 from app.main import app as fastapi_app
@@ -69,6 +71,9 @@ async def fixture_setup_new_test_database() -> None:
         "_ASYNC_SESSIONMAKER",
         async_sessionmaker(engine, expire_on_commit=False),
     )
+
+    # Disable rate limiting for tests
+    limiter.enabled = False
 
     # create app tables in test database
     async with engine.begin() as conn:

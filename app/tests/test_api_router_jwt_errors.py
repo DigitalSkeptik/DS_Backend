@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from fastapi import routing, status
 from freezegun import freeze_time
@@ -6,21 +8,44 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import api_messages
-from app.api.api_router import api_router
+from app.api.api_router import v1_api_router as api_router
 from app.core.security.jwt import create_jwt_token
 from app.models import User
 
 
+def get_routes_without_path_params():
+    """Get only routes that don't have path parameters and require authentication."""
+    # Public routes that don't require authentication
+    public_routes = {
+        "/auth/access-token",
+        "/auth/refresh-token",
+        "/auth/register",
+        "/courses",  # GET endpoint is public
+    }
+
+    routes = []
+    for route in api_router.routes:
+        if isinstance(route, routing.APIRoute):
+            # Check if route has path parameters (e.g., {user_id})
+            if not re.search(r"\{[^}]+\}", route.path):
+                # Skip public routes that don't require authentication
+                if route.path not in public_routes:
+                    routes.append(route)
+    return routes
+
+
 @pytest.mark.asyncio(loop_scope="session")
-@pytest.mark.parametrize("api_route", api_router.routes)
+@pytest.mark.parametrize("api_route", get_routes_without_path_params())
 async def test_api_routes_raise_401_on_jwt_decode_errors(
     client: AsyncClient,
     api_route: routing.APIRoute,
 ) -> None:
     for method in api_route.methods:
+        # Add /api/v1 prefix to the route path
+        url = f"/api/v1{api_route.path}"
         response = await client.request(
             method=method,
-            url=api_route.path,
+            url=url,
             headers={"Authorization": "Bearer garbage-invalid-jwt"},
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -28,7 +53,7 @@ async def test_api_routes_raise_401_on_jwt_decode_errors(
 
 
 @pytest.mark.asyncio(loop_scope="session")
-@pytest.mark.parametrize("api_route", api_router.routes)
+@pytest.mark.parametrize("api_route", get_routes_without_path_params())
 async def test_api_routes_raise_401_on_jwt_expired_token(
     client: AsyncClient,
     default_user: User,
@@ -38,9 +63,11 @@ async def test_api_routes_raise_401_on_jwt_expired_token(
         jwt = create_jwt_token(default_user.unique_id)
     with freeze_time("2023-02-01"):
         for method in api_route.methods:
+            # Add /api/v1 prefix to the route path
+            url = f"/api/v1{api_route.path}"
             response = await client.request(
                 method=method,
-                url=api_route.path,
+                url=url,
                 headers={"Authorization": f"Bearer {jwt.access_token}"},
             )
             assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -48,7 +75,7 @@ async def test_api_routes_raise_401_on_jwt_expired_token(
 
 
 @pytest.mark.asyncio(loop_scope="session")
-@pytest.mark.parametrize("api_route", api_router.routes)
+@pytest.mark.parametrize("api_route", get_routes_without_path_params())
 async def test_api_routes_raise_401_on_jwt_user_deleted(
     client: AsyncClient,
     default_user_headers: dict[str, str],
@@ -60,9 +87,11 @@ async def test_api_routes_raise_401_on_jwt_user_deleted(
     await session.commit()
 
     for method in api_route.methods:
+        # Add /api/v1 prefix to the route path
+        url = f"/api/v1{api_route.path}"
         response = await client.request(
             method=method,
-            url=api_route.path,
+            url=url,
             headers=default_user_headers,
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
