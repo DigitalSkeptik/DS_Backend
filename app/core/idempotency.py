@@ -119,7 +119,7 @@ async def check_body_hash_mismatch(
 class IdempotencyMiddleware:
     """Middleware to handle idempotency for POST operations"""
 
-    def __init__(self, app: Any) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, app: Any) -> None:
         self.app = app
 
     async def __call__(  # noqa: PLR0912, PLR0915
@@ -217,16 +217,16 @@ class IdempotencyMiddleware:
                 try:
                     # Parse response body as JSON if possible
                     try:
-                        response_body = json.loads(response_data["body"].decode())  # type: ignore[union-attr]
+                        response_body = json.loads(response_data["body"].decode())
                     except (json.JSONDecodeError, UnicodeDecodeError):
-                        response_body = {"raw_response": response_data["body"].decode()}  # type: ignore[union-attr]
+                        response_body = {"raw_response": response_data["body"].decode()}
 
                     await store_idempotency_response(
                         idempotency_key=idempotency_key,
                         request_path=scope["path"],
                         request_method=scope["method"],
                         request_body=request_body,
-                        response_status=response_data["status"],  # type: ignore[arg-type]
+                        response_status=response_data["status"],
                         response_body=response_body,
                         session=session,
                     )
