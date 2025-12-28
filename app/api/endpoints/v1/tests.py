@@ -90,13 +90,70 @@ PASSING_THRESHOLD = 70
     "/module/{module_id}",
     response_model=TestResponse,
     responses=TEST_RESPONSES,
-    description="Retrieve test for module with randomized questions",
+    summary="Получить тест модуля",
+    response_description="Тест с вопросами и вариантами ответов",
 )
 async def get_module_test(
     module_id: str,
     module: Module = Depends(deps.get_module_with_access_check),
     session: AsyncSession = Depends(deps.get_session),
 ) -> TestResponse:
+    """
+    Получить тест для модуля с рандомизированными вопросами.
+
+    ## Требования
+
+    - **Авторизация обязательна**: Требуется JWT токен
+    - **Покупка курса**: Пользователь должен купить курс
+    - **Наличие теста**: Модуль должен иметь тест
+
+    ## Особенности
+
+    - **Рандомизация**: Вопросы перемешиваются при каждом запросе
+    - **Без правильных ответов**: Правильные ответы не показываются
+    - **Stateless**: Не сохраняет состояние прохождения
+
+    ## Возвращаемые данные
+
+    ### Информация о тесте
+    - `test_id` - уникальный идентификатор теста
+    - `module_id` - ID модуля
+    - `title` - название теста
+    - `description` - описание теста
+
+    ### Вопросы
+    - `questions` - массив вопросов (порядок рандомизирован)
+      - `question_id` - ID вопроса
+      - `question_text` - текст вопроса
+      - `answer_options` - варианты ответов
+        - `option_id` - ID варианта ответа
+        - `answer_text` - текст варианта ответа
+
+    **Примечание**: Поле `is_correct` не включается в ответ для предотвращения читерства.
+
+    ## Процесс прохождения теста
+
+    1. Получить тест (этот эндпоинт)
+    2. Пользователь отвечает на вопросы
+    3. Отправить ответы через `POST /tests/{test_id}/submit`
+    4. Получить результаты с правильными ответами
+
+    ## Примеры использования
+
+    ```bash
+    # Получить тест модуля
+    GET /api/v2/tests/module/{module_id}
+    Authorization: Bearer <token>
+    ```
+
+    ## Ошибки
+
+    - **401 Unauthorized**: Не авторизован
+    - **403 Forbidden**: Курс не куплен
+    - **404 Not Found**:
+      - Модуль не найден
+      - У модуля нет теста
+    """
     test = await session.scalar(
         select(Test)
         .options(selectinload(Test.questions).selectinload(Question.answer_options))
@@ -137,7 +194,8 @@ async def get_module_test(
     "/{test_id}/answer",
     response_model=QuestionResultResponse,
     responses=SUBMIT_RESPONSES,
-    description="Validate a single answer and return correctness with explanation (stateless)",
+    summary="Проверить один ответ",
+    response_description="Результат проверки ответа с объяснением",
 )
 async def check_single_answer(
     test_id: str,
@@ -145,6 +203,69 @@ async def check_single_answer(
     current_user: User = Depends(deps.get_current_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> QuestionResultResponse:
+    """
+    Проверить правильность одного ответа (stateless режим).
+
+    ## Описание
+
+    Позволяет проверить правильность ответа на отдельный вопрос без отправки всего теста.
+    Полезно для интерактивного обучения с немедленной обратной связью.
+
+    ## Особенности
+
+    - **Stateless**: Не сохраняет прогресс прохождения теста
+    - **Немедленная обратная связь**: Сразу показывает правильный ответ
+    - **С объяснением**: Включает объяснение правильного ответа
+    - **Не влияет на завершение**: Не засчитывается как прохождение теста
+
+    ## Требования
+
+    - **Авторизация обязательна**: Требуется JWT токен
+    - **Покупка курса**: Пользователь должен купить курс
+
+    ## Входные данные
+
+    - `question_id` - ID вопроса из теста
+    - `selected_option_id` - ID выбранного варианта ответа
+
+    ## Возвращаемые данные
+
+    - `question_id` - ID вопроса
+    - `question_text` - текст вопроса
+    - `selected_option_id` - ID выбранного ответа
+    - `is_correct` - правильный ли ответ (true/false)
+    - `correct_option` - информация о правильном ответе
+      - `option_id` - ID правильного ответа
+      - `answer_text` - текст правильного ответа
+      - `explanation` - объяснение (если есть)
+
+    ## Примеры использования
+
+    ```bash
+    # Проверить ответ на вопрос
+    POST /api/v2/tests/{test_id}/answer
+    Authorization: Bearer <token>
+    Content-Type: application/json
+
+    {
+      "question_id": "question-uuid",
+      "selected_option_id": "option-uuid"
+    }
+    ```
+
+    ## Отличие от полной отправки теста
+
+    - **Этот эндпоинт**: Проверяет один вопрос, не засчитывается
+    - **POST /tests/{test_id}/submit**: Отправляет весь тест, засчитывается прохождение
+
+    ## Ошибки
+
+    - **400 Bad Request**:
+      - Вопрос не принадлежит тесту
+      - Неверный ID варианта ответа
+    - **403 Forbidden**: Курс не куплен
+    - **404 Not Found**: Тест не найден
+    """
     test = await session.scalar(
         select(Test)
         .options(
@@ -209,7 +330,8 @@ async def check_single_answer(
     "/{test_id}/submit",
     response_model=TestSubmissionResponse,
     responses=SUBMIT_RESPONSES,
-    description="Submit test answers and get results",
+    summary="Отправить тест на проверку",
+    response_description="Результаты прохождения теста с оценкой",
 )
 async def submit_test(
     test_id: str,
@@ -217,6 +339,94 @@ async def submit_test(
     current_user: User = Depends(deps.get_current_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> TestSubmissionResponse:
+    """
+    Отправить ответы на все вопросы теста и получить результаты.
+
+    ## Описание
+
+    Финальная отправка теста с проверкой всех ответов. При успешном прохождении
+    (≥70% правильных ответов) модуль автоматически отмечается как завершенный.
+
+    ## Требования
+
+    - **Авторизация обязательна**: Требуется JWT токен
+    - **Покупка курса**: Пользователь должен купить курс
+    - **Все вопросы**: Необходимо ответить на все вопросы теста
+
+    ## Критерии прохождения
+
+    - **Проходной балл**: 70% правильных ответов
+    - **Завершение модуля**: Автоматически при первом успешном прохождении
+    - **Повторное прохождение**: Можно проходить несколько раз
+
+    ## Входные данные
+
+    - `answers` - массив ответов на все вопросы
+      - `question_id` - ID вопроса
+      - `selected_option_id` - ID выбранного варианта ответа
+
+    **Важно**: Должны быть ответы на ВСЕ вопросы теста, иначе будет ошибка 400.
+
+    ## Возвращаемые данные
+
+    ### Общие результаты
+    - `test_id` - ID теста
+    - `score_percentage` - процент правильных ответов (0-100)
+    - `passed` - пройден ли тест (≥70%)
+    - `passing_threshold` - проходной балл (70)
+    - `total_questions` - всего вопросов
+    - `correct_answers` - количество правильных ответов
+    - `module_completed` - завершен ли модуль (true при первом прохождении)
+
+    ### Детальные результаты
+    - `results` - массив результатов по каждому вопросу
+      - `question_id` - ID вопроса
+      - `question_text` - текст вопроса
+      - `selected_option_id` - выбранный ответ
+      - `is_correct` - правильный ли ответ
+      - `correct_option` - информация о правильном ответе
+        - `option_id` - ID правильного ответа
+        - `answer_text` - текст правильного ответа
+        - `explanation` - объяснение
+
+    ## Примеры использования
+
+    ```bash
+    # Отправить тест
+    POST /api/v2/tests/{test_id}/submit
+    Authorization: Bearer <token>
+    Content-Type: application/json
+
+    {
+      "answers": [
+        {
+          "question_id": "question-1-uuid",
+          "selected_option_id": "option-a-uuid"
+        },
+        {
+          "question_id": "question-2-uuid",
+          "selected_option_id": "option-b-uuid"
+        }
+      ]
+    }
+    ```
+
+    ## Процесс прохождения
+
+    1. Получить тест: `GET /tests/module/{module_id}`
+    2. Пользователь отвечает на все вопросы
+    3. Отправить ответы: `POST /tests/{test_id}/submit`
+    4. Получить результаты с правильными ответами
+    5. При успехе (≥70%) модуль автоматически завершается
+
+    ## Ошибки
+
+    - **400 Bad Request**:
+      - Не все вопросы отвечены
+      - Неверный ID вопроса или варианта ответа
+    - **403 Forbidden**: Курс не куплен
+    - **404 Not Found**: Тест не найден
+    """
     test = await session.scalar(
         select(Test)
         .options(
@@ -322,13 +532,88 @@ async def submit_test(
 @router.get(
     "/module/{module_id}/status",
     response_model=ModuleTestStatusResponse,
-    description="Check if user has completed module's test",
+    summary="Получить статус теста модуля",
+    response_description="Информация о наличии и прохождении теста",
 )
 async def get_module_test_status(
     module_id: str,
     current_user: User = Depends(deps.get_current_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> ModuleTestStatusResponse:
+    """
+    Проверить статус прохождения теста модуля пользователем.
+
+    ## Описание
+
+    Возвращает информацию о том, есть ли у модуля тест и завершил ли
+    его пользователь. Полезно для отображения прогресса обучения.
+
+    ## Требования
+
+    - **Авторизация обязательна**: Требуется JWT токен
+
+    ## Возвращаемые данные
+
+    - `module_id` - ID модуля
+    - `has_test` - есть ли у модуля тест (true/false)
+    - `completed` - завершен ли тест пользователем (true/false)
+    - `completed_at` - дата и время завершения (ISO 8601, null если не завершен)
+
+    ## Логика завершения
+
+    Тест считается завершенным, если:
+    - Пользователь отправил тест через `POST /tests/{test_id}/submit`
+    - Набрал ≥70% правильных ответов
+    - Модуль автоматически отмечен как завершенный
+
+    ## Примеры использования
+
+    ```bash
+    # Проверить статус теста модуля
+    GET /api/v2/tests/module/{module_id}/status
+    Authorization: Bearer <token>
+    ```
+
+    ## Примеры ответов
+
+    ### Модуль с завершенным тестом
+    ```json
+    {
+      "module_id": "module-uuid",
+      "has_test": true,
+      "completed": true,
+      "completed_at": "2024-01-15T10:30:00Z"
+    }
+    ```
+
+    ### Модуль с незавершенным тестом
+    ```json
+    {
+      "module_id": "module-uuid",
+      "has_test": true,
+      "completed": false,
+      "completed_at": null
+    }
+    ```
+
+    ### Модуль без теста
+    ```json
+    {
+      "module_id": "module-uuid",
+      "has_test": false,
+      "completed": false,
+      "completed_at": null
+    }
+    ```
+
+    ## Использование в UI
+
+    Этот эндпоинт полезен для:
+    - Отображения прогресса курса
+    - Показа бейджей "Завершено"
+    - Блокировки следующих модулей до прохождения теста
+    - Отображения даты завершения
+    """
     test = await session.scalar(select(Test).where(Test.module_id == module_id))
 
     has_test = test is not None

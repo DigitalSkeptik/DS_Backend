@@ -44,7 +44,7 @@ TAG_RESPONSES: dict[int | str, dict[str, Any]] = {
 @router.get(
     "",
     response_model=list[AdminTagResponse],
-    description="Get all tags (admin view)",
+    summary="Получить все теги (админ)",
 )
 async def get_all_tags(
     skip: int = Query(0, ge=0, description="Number of tags to skip"),
@@ -79,7 +79,7 @@ async def get_all_tags(
     "/{tag_id}",
     response_model=AdminTagResponse,
     responses=TAG_RESPONSES,
-    description="Get tag by ID (admin view)",
+    summary="Получить тег (админ)",
 )
 async def get_tag(
     tag_id: str,
@@ -119,7 +119,7 @@ async def get_tag(
             },
         }
     },
-    description="Create a new tag",
+    summary="Создать тег",
 )
 async def create_tag(
     tag_data: TagCreateRequest,
@@ -148,7 +148,7 @@ async def create_tag(
     "/{tag_id}",
     response_model=AdminTagResponse,
     responses=TAG_RESPONSES,
-    description="Update a tag",
+    summary="Обновить тег",
 )
 async def update_tag(
     tag_id: str,
@@ -188,7 +188,7 @@ async def update_tag(
     "/{tag_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses=TAG_RESPONSES,
-    description="Delete a tag",
+    summary="Удалить тег",
 )
 async def delete_tag(
     tag_id: str,
@@ -218,7 +218,7 @@ async def delete_tag(
 @router.post(
     "/bulk-delete",
     response_model=AdminBulkOperationResponse,
-    description="Delete multiple tags",
+    summary="Массовое удаление тегов",
 )
 async def bulk_delete_tags(
     tag_ids: list[str],

@@ -14,6 +14,9 @@ from app.api.endpoints.v2 import (
     courses as courses_v2,
 )
 from app.api.endpoints.v2 import (
+    internal,
+)
+from app.api.endpoints.v2 import (
     modules as modules_v2,
 )
 from app.api.endpoints.v2 import (
@@ -36,3 +39,4 @@ router_v2.include_router(users_v2.router, prefix="/users", tags=["users"])
 router_v2.include_router(tests_v2.router, prefix="/tests", tags=["tests"])
 router_v2.include_router(courses_v2.router, prefix="/courses", tags=["courses"])
 router_v2.include_router(modules_v2.router, prefix="/modules", tags=["modules"])
+router_v2.include_router(internal.router, prefix="/internal", tags=["internal"])

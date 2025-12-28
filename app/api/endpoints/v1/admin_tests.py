@@ -58,7 +58,7 @@ TEST_RESPONSES: dict[int | str, dict[str, Any]] = {
     "/tests/{test_id}",
     response_model=AdminTestResponse,
     responses=TEST_RESPONSES,
-    description="Get test by ID (admin view)",
+    summary="Получить тест (админ)",
 )
 async def get_test(
     test_id: str,
@@ -113,7 +113,7 @@ async def get_test(
     "/modules/{module_id}/test",
     response_model=AdminTestResponse,
     responses={404: {"description": "Module not found or has no test"}},
-    description="Get test for a module (admin view)",
+    summary="Получить тест модуля (админ)",
 )
 async def get_module_test(
     module_id: str,
@@ -173,7 +173,7 @@ async def get_module_test(
             "description": "Module already has a test. Although we technically support multiple tests per module, right now we only allow one."
         },
     },
-    description="Create a new test for a module",
+    summary="Создать тест",
 )
 async def create_test(
     module_id: str,
@@ -214,7 +214,7 @@ async def create_test(
     "/tests/{test_id}",
     response_model=AdminTestResponse,
     responses=TEST_RESPONSES,
-    description="Update a test",
+    summary="Обновить тест",
 )
 async def update_test(
     test_id: str,
@@ -244,7 +244,7 @@ async def update_test(
     "/tests/{test_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses=TEST_RESPONSES,
-    description="Delete a test",
+    summary="Удалить тест",
 )
 async def delete_test(
     test_id: str,

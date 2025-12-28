@@ -78,7 +78,7 @@ ANSWER_OPTION_RESPONSES: dict[int | str, dict[str, Any]] = {
     "/questions/{question_id}",
     response_model=AdminQuestionResponse,
     responses=QUESTION_RESPONSES,
-    description="Get question by ID (admin view)",
+    summary="Получить вопрос (админ)",
 )
 async def get_question(
     question_id: str,
@@ -122,7 +122,7 @@ async def get_question(
     "/tests/{test_id}/questions",
     response_model=list[AdminQuestionResponse],
     responses={404: {"description": "Test not found"}},
-    description="Get all questions for a test (admin view)",
+    summary="Получить вопросы теста (админ)",
 )
 async def get_test_questions(
     test_id: str,
@@ -168,7 +168,7 @@ async def get_test_questions(
     response_model=AdminQuestionResponse,
     status_code=status.HTTP_201_CREATED,
     responses={404: {"description": "Test not found"}},
-    description="Create a new question for a test",
+    summary="Создать вопрос",
 )
 async def create_question(
     test_id: str,
@@ -199,7 +199,7 @@ async def create_question(
     "/questions/{question_id}",
     response_model=AdminQuestionResponse,
     responses=QUESTION_RESPONSES,
-    description="Update a question",
+    summary="Обновить вопрос",
 )
 async def update_question(
     question_id: str,
@@ -233,7 +233,7 @@ async def update_question(
     "/questions/{question_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses=QUESTION_RESPONSES,
-    description="Delete a question",
+    summary="Удалить вопрос",
 )
 async def delete_question(
     question_id: str,
@@ -266,7 +266,7 @@ async def delete_question(
     "/answer-options/{option_id}",
     response_model=AdminAnswerOptionResponse,
     responses=ANSWER_OPTION_RESPONSES,
-    description="Get answer option by ID (admin view)",
+    summary="Получить вариант ответа (админ)",
 )
 async def get_answer_option(
     option_id: str,
@@ -299,7 +299,7 @@ async def get_answer_option(
     response_model=AdminAnswerOptionResponse,
     status_code=status.HTTP_201_CREATED,
     responses={404: {"description": "Question not found"}},
-    description="Create a new answer option for a question",
+    summary="Создать вариант ответа",
 )
 async def create_answer_option(
     question_id: str,
@@ -334,7 +334,7 @@ async def create_answer_option(
     "/answer-options/{option_id}",
     response_model=AdminAnswerOptionResponse,
     responses=ANSWER_OPTION_RESPONSES,
-    description="Update an answer option",
+    summary="Обновить вариант ответа",
 )
 async def update_answer_option(
     option_id: str,
@@ -368,7 +368,7 @@ async def update_answer_option(
     "/answer-options/{option_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses=ANSWER_OPTION_RESPONSES,
-    description="Delete an answer option",
+    summary="Удалить вариант ответа",
 )
 async def delete_answer_option(
     option_id: str,

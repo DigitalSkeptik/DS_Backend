@@ -1,51 +1,485 @@
 # DS_Backend
 
-## Startup
+Backend API для платформы онлайн-обучения, реализующий полный функционал управления курсами, модулями, тестами и пользователями.
 
-### 0. Clone repository
-Just use `git clone`, and go to project directory, you know it...
-Then create a `venv`
+## Описание предметной области
 
-### 1. Install dependecies with [Poetry](https://python-poetry.org/docs/)
-**USE BASH**
+Проект представляет собой RESTful API для системы онлайн-обучения со следующими основными сущностями:
+
+### Основные сущности
+
+**Курсы (Courses)**
+- Основная единица контента в системе
+- Содержат модули, теги, цены и изображения
+- Поддерживают персональные скидки для пользователей
+- Могут быть активными или неактивными
+
+**Модули (Modules)**
+- Структурные единицы курса
+- Содержат учебный материал
+- Имеют порядковый номер (position)
+- Могут быть отмечены как завершенные пользователем
+
+**Тесты (Tests)**
+- Проверка знаний по модулям
+- Содержат вопросы с вариантами ответов
+- Поддерживают множественный выбор
+- Хранят результаты прохождения
+
+**Пользователи (Users)**
+- Регистрация и аутентификация
+- Роли: обычный пользователь и администратор
+- Покупка курсов и отслеживание прогресса
+- Персональные скидки на курсы
+
+**Теги (Tags)**
+- Категоризация курсов
+- Множественная привязка к курсам
+- Упрощают поиск и фильтрацию
+
+### Связи между сущностями
+
+- Курс содержит множество модулей (1:N)
+- Модуль содержит множество тестов (1:N)
+- Тест содержит множество вопросов (1:N)
+- Вопрос содержит множество вариантов ответа (1:N)
+- Пользователь может купить множество курсов (M:N через PurchasedCourse)
+- Пользователь может завершить множество модулей (M:N через CompletedModule)
+- Курс может иметь множество тегов (M:N через CourseTag)
+- Пользователь может иметь персональные скидки на курсы (1:N через CourseDiscount)
+
+## Архитектура API
+
+### Версионирование
+
+API реализует две версии для обеспечения обратной совместимости:
+
+**API v1** (`/api/v1/`)
+- Базовая версия с основным функционалом
+- Offset/limit пагинация
+- Без персонализации данных
+- Стабильная версия для существующих клиентов
+
+**API v2** (`/api/v2/`)
+- Расширенная версия с дополнительными возможностями
+- Page-based пагинация с метаданными
+- Персонализированные цены и скидки
+- Выборочные поля (field selection)
+- Внутренние API для служебных операций
+- Статистика прогресса пользователя
+
+### Структура эндпоинтов
+
+#### Публичные эндпоинты (v1 и v2)
+
+**Аутентификация**
+- `POST /api/v{1,2}/auth/register` - регистрация нового пользователя
+- `POST /api/v{1,2}/auth/login` - вход в систему (получение JWT токена)
+- `POST /api/v{1,2}/auth/refresh` - обновление access токена
+
+**Курсы**
+- `GET /api/v{1,2}/courses` - список курсов
+- `GET /api/v{1,2}/courses/{id}` - детали курса
+
+**Модули**
+- `GET /api/v{1,2}/modules/{id}` - детали модуля
+- `POST /api/v{1,2}/modules/{id}/complete` - отметить модуль как завершенный
+
+**Тесты**
+- `GET /api/v{1,2}/tests/{id}` - получить тест
+- `POST /api/v{1,2}/tests/{id}/submit` - отправить ответы на тест
+
+**Пользователи**
+- `GET /api/v{1,2}/users/me` - информация о текущем пользователе
+- `PATCH /api/v{1,2}/users/me` - обновить профиль
+- `POST /api/v{1,2}/users/me/change-password` - изменить пароль
+
+#### Административные эндпоинты (v1 и v2)
+
+Требуют роль администратора.
+
+**Управление курсами**
+- `POST /api/v{1,2}/admin/courses` - создать курс
+- `PATCH /api/v{1,2}/admin/courses/{id}` - обновить курс
+- `DELETE /api/v{1,2}/admin/courses/{id}` - удалить курс
+
+**Управление модулями**
+- `POST /api/v{1,2}/admin/modules` - создать модуль
+- `PATCH /api/v{1,2}/admin/modules/{id}` - обновить модуль
+- `DELETE /api/v{1,2}/admin/modules/{id}` - удалить модуль
+
+**Управление тестами**
+- `POST /api/v{1,2}/admin/tests` - создать тест
+- `PATCH /api/v{1,2}/admin/tests/{id}` - обновить тест
+- `DELETE /api/v{1,2}/admin/tests/{id}` - удалить тест
+
+**Управление пользователями**
+- `GET /api/v{1,2}/admin/users` - список пользователей
+- `DELETE /api/v{1,2}/admin/users/{id}` - удалить пользователя
+
+**Управление тегами**
+- `POST /api/v{1,2}/admin/tags` - создать тег
+- `PATCH /api/v{1,2}/admin/tags/{id}` - обновить тег
+- `DELETE /api/v{1,2}/admin/tags/{id}` - удалить тег
+
+#### Внутренние эндпоинты (только v2)
+
+Требуют API-ключ в заголовке `X-API-Key`.
+
+**Служебные операции**
+- `POST /api/v2/internal/courses/batch-create` - массовое создание курсов
+- `POST /api/v2/internal/users/{id}/make-admin` - повысить пользователя до администратора
+- `GET /api/v2/internal/stats/courses` - статистика по курсам
+- `GET /api/v2/internal/health/detailed` - детальная проверка здоровья системы
+
+## Аутентификация и безопасность
+
+### Выбор метода аутентификации
+
+Для данного проекта выбрана JWT аутентификация с refresh токенами. Это обусловлено тем, что JWT токены содержат всю необходимую информацию о пользователе, что позволяет снизить нагрузку на базу данных (например упрощая проверку прав), а также за счет большей простоты по сравнению с OAuth.
+
+#### API ключи (для внутренних сервисов)
+
+Для внутренних эндпоинтов используются статические API-ключи:
+- Передаются в заголовке: `X-API-Key: <key>`
+- Настраиваются через переменную окружения `SECURITY__INTERNAL_API_KEY`
+- Используются для служебных операций и интеграций
+- Не предназначены для пользовательской аутентификации
+
+## Ключевые возможности
+
+### 1. Идемпотентность
+
+Все POST-запросы поддерживают идемпотентность через заголовок `Idempotency-Key`.
+
+**Принцип работы:**
+- Клиент отправляет уникальный ключ в заголовке `Idempotency-Key`
+- Сервер сохраняет результат первого запроса
+- Повторные запросы с тем же ключом возвращают кешированный результат
+- Предотвращает дублирование операций при сетевых сбоях
+
+**Пример использования:**
+
 ```bash
-### Poetry install (python3.13)
+# Первый запрос - создает курс
+POST /api/v2/admin/courses
+Idempotency-Key: unique-key-12345
+Content-Type: application/json
+
+{
+  "title": "Python для начинающих",
+  "price": 1999.00
+}
+
+# Повторный запрос с тем же ключом - возвращает тот же результат
+POST /api/v2/admin/courses
+Idempotency-Key: unique-key-12345
+Content-Type: application/json
+
+{
+  "title": "Python для начинающих",
+  "price": 1999.00
+}
+# Ответ будет содержать заголовок: X-Idempotency-Cached: true
+```
+
+**Особенности:**
+- Ключ должен быть от 3 до 255 символов
+- Результат хранится 24 часа
+- Проверяется хеш тела запроса (защита от изменения данных)
+- Автоматическая очистка устаревших записей
+
+### 2. Ограничение частоты запросов (Rate Limiting)
+
+Защита от злоупотреблений и DDoS атак.
+
+**Лимиты:**
+- Общие эндпоинты: 60 запросов в минуту
+- Получение access токена: 10 запросов в час (защита от брутфорса)
+- Обновление refresh токена: 1 запрос в час
+
+**Заголовки ответа:**
+- `X-RateLimit-Limit` - максимальное количество запросов
+- `X-Limit-Remaining` - осталось запросов
+- `X-RateLimit-Reset` - время сброса лимита (Unix timestamp)
+- `Retry-After` - секунд до повторной попытки (при 429 ошибке)
+
+**Пример ответа при превышении лимита:**
+
+```bash
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 60
+X-Limit-Remaining: 0
+X-RateLimit-Reset: 1703764800
+Retry-After: 45
+
+{
+  "detail": "Rate limit exceeded: 60 per 1 minute"
+}
+```
+
+### 3. Пагинация
+
+#### v1 - Offset/Limit пагинация
+
+```bash
+GET /api/v1/courses?skip=0&limit=20
+```
+
+Параметры:
+- `skip` - количество записей для пропуска (по умолчанию 0)
+- `limit` - максимальное количество записей (по умолчанию 100, макс 1000)
+
+#### v2 - Page-based пагинация
+
+```bash
+GET /api/v2/courses?page=1&page_size=20
+```
+
+Параметры:
+- `page` - номер страницы, начиная с 1 (по умолчанию 1)
+- `page_size` - размер страницы (по умолчанию 20, макс 1000)
+
+**Метаданные в ответе:**
+
+```json
+{
+  "items": [...],
+  "pagination": {
+    "total": 150,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 8,
+    "has_next": true,
+    "has_prev": false
+  }
+}
+```
+
+**Обоснование выбора:**
+- v1 использует offset/limit для обратной совместимости
+- v2 использует page-based как более интуитивный для пользователей
+- Метаданные упрощают построение UI пагинации
+- Ограничение page_size предотвращает перегрузку сервера
+
+### 4. Выборочные поля (Field Selection)
+
+Позволяет клиенту запрашивать только необходимые поля, уменьшая размер ответа.
+
+**Использование:**
+
+```bash
+# Запросить только определенные поля
+GET /api/v2/courses?fields=unique_id,title,price
+
+# Запросить минимальный набор полей
+GET /api/v2/courses?fields=minimal
+```
+
+**Правила:**
+- Обязательные поля всегда включаются
+- Режим `minimal` возвращает только критичные поля
+ращает только критичные поля
+- Неверные имена полей вызывают ошибку валидации
+
+**Пример ответа с выборочными полями:**
+
+```json
+{
+  "items": [
+    {
+      "unique_id": "123e4567-e89b-12d3-a456-426614174000",
+      "title": "Python для начинающих",
+      "price": 1999.00
+    }
+  ],
+  "pagination": {...}
+}
+```
+
+### 5. Внутренние API
+
+Специальные эндпоинты для служебных операций и интеграций.
+
+**Особенности:**
+- Требуют API-ключ вместо JWT токена
+- Упрощенная валидация
+- Массовые операции
+- Детальная статистика
+
+**Примеры использования:**
+
+```bash
+# Массовое создание курсов
+POST /api/v2/internal/courses/batch-create
+X-API-Key: your-secret-key
+Content-Type: application/json
+
+[
+  {
+    "title": "Python для начинающих",
+    "price": 1999.00
+  },
+  {
+    "title": "JavaScript Advanced",
+    "price": 2999.00
+  }
+]
+
+# Получить статистику
+GET /api/v2/internal/stats/courses
+X-API-Key: your-secret-key
+
+# Проверка здоровья системы
+GET /api/v2/internal/health/detailed
+X-API-Key: your-secret-key
+```
+
+
+## Документация API
+### Swagger UI
+Интерактивная документация доступна по адресам:
+- API v1: `http://localhost/api/v1/docs`
+- API v2: `http://localhost/api/v2/docs`
+
+### ReDoc
+Альтернативная документация:
+- API v1: `http://localhost/api/v1/redoc`
+- API v2: `http://localhost/api/v2/redoc`
+
+### OpenAPI Schema
+JSON схемы:
+- API v1: `http://localhost/api/v1/openapi.json`
+- API v2: `http://localhost/api/v2/openapi.json`
+
+
+### Обратная совместимость
+
+- v1 продолжает работать без изменений
+- Все изменения в v2 являются аддитивными
+- Существующие клиенты могут продолжать использовать v1
+- Новые клиенты должны использовать v2 для доступа к новым возможностям
+
+## Запуск проекта
+
+### Production
+
+#### 0. Клонирование репозитория
+```bash
+git clone <repository-url>
+cd DS_Backend
+```
+
+#### 1. Настройка переменных окружения
+Создайте файл `.env` на основе `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Обязательные переменные:
+```bash
+# JWT секретный ключ (используйте криптостойкий ключ)
+SECURITY__JWT_SECRET_KEY=your_jwt_secret_key_here
+
+# API ключ для внутренних сервисов
+SECURITY__INTERNAL_API_KEY=your_internal_api_key_here
+
+# CORS origins (список разрешенных источников)
+SECURITY__BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:8001"]
+
+# Разрешенные хосты
+SECURITY__ALLOWED_HOSTS=["localhost", "127.0.0.1"]
+
+# Настройки базы данных
+DATABASE__HOSTNAME=postgres_db
+DATABASE__USERNAME=your_database_username_here
+DATABASE__PASSWORD=your_database_password_here
+DATABASE__PORT=5432
+DATABASE__DB=default_db
+```
+
+#### 2. Запуск через Docker Compose
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+#### 3. Доступ к приложению
+- Swagger UI: `http://localhost/api/v2/docs`
+- ReDoc: `http://localhost/api/v2/redoc`
+
+#### Устранение неполадок
+Если получаете 404 ошибки, убедитесь что порт 80 не занят другим процессом (например, Apache). При необходимости измените порт в `nginx.conf`.
+
+### Development
+
+#### 0. Клонирование репозитория
+```bash
+git clone <repository-url>
+cd DS_Backend
+```
+
+#### 1. Создание виртуального окружения
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# или
+venv\Scripts\activate  # Windows
+```
+
+#### 2. Настройка переменных окружения
+```bash
+cp .env.example .env
+# Отредактируйте .env при необходимости
+```
+
+#### 3. Установка зависимостей с Poetry
+**Требуется Python 3.13**
+
+```bash
+# Установка Poetry
 pip install poetry
+
+# Установка зависимостей проекта
 poetry install
 ```
 
-!!! Note, be sure to use `python3.13` with either poetry or standard venv & pip.
-
-### 2. Setup database and migrations
-
+#### 4. Запуск базы данных
 ```bash
-### Setup database
+# Запуск PostgreSQL в Docker
 docker-compose up -d
+```
 
-### Run Alembic migrations
+#### 5. Применение миграций
+```bash
+# Применить все миграции
 alembic upgrade head
 ```
 
-### 3. Run app
-
+#### 6. Запуск приложения
 ```bash
+# Запуск с автоперезагрузкой
 uvicorn app.main:app --reload
-
 ```
 
+Приложение будет доступно по адресу: `http://localhost:8000`
 
-## Versioning
+### Работа с миграциями
 
-API has two versions at this moment, `/v1` and `/v2`. Both versions expose Swagger and Redoc docs, e.g. `/v1/docs` for Swagger of API v1, and `/v2/redoc` for Redoc of API v2.
-
-## Authentication
-
-API uses JWT tokens with refresh tokens for authentication. It is used since our this API is designed only for one first party client, so we can just do authentication on our own. Another concern is that we need to pass user session data to billing (mock) service, so it is nore convenient to use tokens for this task.
-
-### DEV
-#### Making migrations
+#### Создание новой миграции
 ```bash
-alembic revision --autogenerate -m "migration_name"
+# Автоматическая генерация миграции на основе изменений моделей
+alembic revision --autogenerate -m "описание_изменений"
 
+# Применить миграцию
 alembic upgrade head
+```
+
+#### Откат миграции
+```bash
+# Откатить последнюю миграцию
+alembic downgrade -1
+
+# Откатить до конкретной версии
+alembic downgrade <revision_id>
 ```

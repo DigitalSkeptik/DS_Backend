@@ -1,14 +1,23 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import TypeVar
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.core.pagination import PaginatedResponse
+
+T = TypeVar("T")
+
 
 class BaseResponse(BaseModel):
+    """Базовый класс для всех ответов API"""
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class AccessTokenResponse(BaseResponse):
+    """Ответ с токенами доступа после входа или регистрации"""
+
     token_type: str = "Bearer"
     access_token: str
     expires_at: int
@@ -17,20 +26,22 @@ class AccessTokenResponse(BaseResponse):
 
 
 class UserResponse(BaseResponse):
+    """Информация о пользователе"""
+
     unique_id: str
     email: EmailStr
     username: str
 
 
 class AnswerOptionResponse(BaseResponse):
-    """Answer option for a question (when retrieving test)"""
+    """Вариант ответа на вопрос (при получении теста, без указания правильности)"""
 
     option_id: str
     answer_text: str
 
 
 class QuestionResponse(BaseResponse):
-    """Question with answer options (when retrieving test)"""
+    """Вопрос с вариантами ответов (при получении теста)"""
 
     question_id: str
     question_text: str
@@ -38,7 +49,7 @@ class QuestionResponse(BaseResponse):
 
 
 class TestResponse(BaseResponse):
-    """Complete test for taking"""
+    """Полный тест для прохождения"""
 
     test_id: str
     module_id: str
@@ -48,7 +59,7 @@ class TestResponse(BaseResponse):
 
 
 class CorrectAnswerResponse(BaseResponse):
-    """Correct answer with explanation"""
+    """Правильный ответ с объяснением"""
 
     option_id: str
     answer_text: str
@@ -56,7 +67,7 @@ class CorrectAnswerResponse(BaseResponse):
 
 
 class QuestionResultResponse(BaseResponse):
-    """Result for a single question"""
+    """Результат проверки одного вопроса"""
 
     question_id: str
     question_text: str
@@ -66,7 +77,7 @@ class QuestionResultResponse(BaseResponse):
 
 
 class TestSubmissionResponse(BaseResponse):
-    """Complete test submission result"""
+    """Результат отправки теста"""
 
     test_id: str
     score_percentage: float
@@ -79,7 +90,7 @@ class TestSubmissionResponse(BaseResponse):
 
 
 class ModuleTestStatusResponse(BaseResponse):
-    """Module test completion status"""
+    """Статус прохождения теста модуля"""
 
     module_id: str
     has_test: bool
@@ -88,14 +99,14 @@ class ModuleTestStatusResponse(BaseResponse):
 
 
 class TagResponse(BaseResponse):
-    """Tag response for courses"""
+    """Тег курса"""
 
     unique_id: str
     content: str
 
 
 class ModuleResponse(BaseResponse):
-    """Module response for courses"""
+    """Базовая информация о модуле"""
 
     unique_id: str
     course_id: str
@@ -105,7 +116,7 @@ class ModuleResponse(BaseResponse):
 
 
 class CourseListResponse(BaseResponse):
-    """Course list response"""
+    """Курс в списке (v1 - без персонализации)"""
 
     unique_id: str
     title: str
@@ -118,7 +129,7 @@ class CourseListResponse(BaseResponse):
 
 
 class CourseDetailResponse(BaseResponse):
-    """Course detail response"""
+    """Детальная информация о курсе (v1 - без персонализации)"""
 
     unique_id: str
     title: str
@@ -131,7 +142,7 @@ class CourseDetailResponse(BaseResponse):
 
 
 class CourseListResponseV2(CourseListResponse):
-    """Course list response"""
+    """Курс в списке (v2 - с персонализацией)"""
 
     user_discount: int | None = None
     final_price: Decimal
@@ -139,7 +150,7 @@ class CourseListResponseV2(CourseListResponse):
 
 
 class CourseDetailResponseV2(CourseDetailResponse):
-    """Course detail response"""
+    """Детальная информация о курсе (v2 - с персонализацией и прогрессом)"""
 
     user_discount: int | None = None
     final_price: Decimal
@@ -148,7 +159,7 @@ class CourseDetailResponseV2(CourseDetailResponse):
 
 
 class ModuleDetailResponse(BaseResponse):
-    """Module detail response with content for users who purchased the course"""
+    """Детальная информация о модуле с контентом (для купивших курс)"""
 
     unique_id: str
     course_id: str
@@ -159,3 +170,9 @@ class ModuleDetailResponse(BaseResponse):
     is_completed: bool = False
     has_test: bool = False
     test_completed: bool = False
+
+
+# Paginated response types
+PaginatedCourseListResponse = PaginatedResponse[CourseListResponse]
+PaginatedCourseListResponseV2 = PaginatedResponse[CourseListResponseV2]
+PaginatedModuleResponse = PaginatedResponse[ModuleResponse]

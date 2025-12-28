@@ -348,3 +348,20 @@ class CourseTag(Base):
     # Relationships
     course: Mapped["Course"] = relationship(back_populates="tags")
     tag: Mapped["Tag"] = relationship(back_populates="courses")
+
+
+class IdempotencyKey(Base):
+    __tablename__ = "idempotency_key"
+
+    key: Mapped[str] = mapped_column(String(255), primary_key=True, nullable=False)
+    request_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    request_method: Mapped[str] = mapped_column(String(10), nullable=False)
+    request_body_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    response_status: Mapped[int] = mapped_column(nullable=False)
+    response_body: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )

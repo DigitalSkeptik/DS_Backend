@@ -7,13 +7,13 @@ from app.models import UserRole
 
 
 class BaseAdminResponse(BaseModel):
-    """Base class for admin responses"""
+    """Базовый класс для всех административных ответов"""
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class AdminUserResponse(BaseAdminResponse):
-    """Admin view of user with additional fields"""
+    """Административное представление пользователя с дополнительными полями"""
 
     unique_id: str
     email: EmailStr
@@ -24,7 +24,7 @@ class AdminUserResponse(BaseAdminResponse):
 
 
 class AdminTagResponse(BaseAdminResponse):
-    """Admin view of tag"""
+    """Административное представление тега"""
 
     unique_id: str
     content: str
@@ -33,7 +33,7 @@ class AdminTagResponse(BaseAdminResponse):
 
 
 class AdminAnswerOptionResponse(BaseAdminResponse):
-    """Admin view of answer option with correct answer revealed"""
+    """Административное представление варианта ответа (с указанием правильности)"""
 
     unique_id: str
     answer_text: str
@@ -42,7 +42,7 @@ class AdminAnswerOptionResponse(BaseAdminResponse):
 
 
 class AdminQuestionResponse(BaseAdminResponse):
-    """Admin view of question with all answer options"""
+    """Административное представление вопроса со всеми вариантами ответов"""
 
     unique_id: str
     question_text: str
@@ -50,7 +50,7 @@ class AdminQuestionResponse(BaseAdminResponse):
 
 
 class AdminTestResponse(BaseAdminResponse):
-    """Admin view of test with all questions"""
+    """Административное представление теста со всеми вопросами"""
 
     unique_id: str
     module_id: str
@@ -62,7 +62,7 @@ class AdminTestResponse(BaseAdminResponse):
 
 
 class AdminModuleResponse(BaseAdminResponse):
-    """Admin view of module with additional fields"""
+    """Административное представление модуля с дополнительными полями"""
 
     unique_id: str
     course_id: str
@@ -76,7 +76,7 @@ class AdminModuleResponse(BaseAdminResponse):
 
 
 class AdminCourseResponse(BaseAdminResponse):
-    """Admin view of course with additional fields"""
+    """Административное представление курса с полной информацией"""
 
     unique_id: str
     title: str
@@ -91,7 +91,7 @@ class AdminCourseResponse(BaseAdminResponse):
 
 
 class AdminCourseListResponse(BaseAdminResponse):
-    """Admin list view of courses without full details"""
+    """Административное представление курса в списке (без полных деталей)"""
 
     unique_id: str
     title: str
@@ -106,7 +106,7 @@ class AdminCourseListResponse(BaseAdminResponse):
 
 
 class AdminModuleListResponse(BaseAdminResponse):
-    """Admin list view of modules without full details"""
+    """Административное представление модуля в списке (без полных деталей)"""
 
     unique_id: str
     course_id: str
@@ -119,7 +119,7 @@ class AdminModuleListResponse(BaseAdminResponse):
 
 
 class AdminUserListResponse(BaseAdminResponse):
-    """Admin list view of users"""
+    """Административное представление пользователя в списке"""
 
     unique_id: str
     email: EmailStr
@@ -130,7 +130,7 @@ class AdminUserListResponse(BaseAdminResponse):
 
 
 class AdminStatsResponse(BaseAdminResponse):
-    """Admin statistics"""
+    """Статистика платформы для администраторов"""
 
     total_users: int
     total_courses: int
@@ -143,7 +143,7 @@ class AdminStatsResponse(BaseAdminResponse):
 
 
 class AdminBulkOperationResponse(BaseAdminResponse):
-    """Response for bulk operations"""
+    """Результат массовой операции"""
 
     success_count: int
     error_count: int
@@ -151,7 +151,7 @@ class AdminBulkOperationResponse(BaseAdminResponse):
 
 
 class AdminCourseEnrollmentStats(BaseAdminResponse):
-    """Course enrollment statistics"""
+    """Статистика записи на курс"""
 
     course_id: str
     course_title: str

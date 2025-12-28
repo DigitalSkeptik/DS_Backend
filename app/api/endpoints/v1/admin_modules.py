@@ -65,7 +65,8 @@ MODULE_RESPONSES: dict[int | str, dict[str, Any]] = {
     "/courses/{course_id}/modules",
     response_model=list[AdminModuleListResponse],
     responses={404: {"description": "Course not found"}},
-    description="Get all modules for a course (admin view)",
+    summary="Получить модули курса (админ)",
+    response_description="Список модулей с административной информацией",
 )
 async def get_course_modules(
     course_id: str,
@@ -107,7 +108,8 @@ async def get_course_modules(
     "/modules/{module_id}",
     response_model=AdminModuleResponse,
     responses=MODULE_RESPONSES,
-    description="Get module by ID (admin view)",
+    summary="Получить модуль (админ)",
+    response_description="Полная информация о модуле с тестами",
 )
 async def get_module(
     module_id: str,
@@ -180,7 +182,8 @@ async def get_module(
     response_model=AdminModuleResponse,
     status_code=status.HTTP_201_CREATED,
     responses={404: {"description": "Course not found"}},
-    description="Create a new module in a course",
+    summary="Создать модуль",
+    response_description="Созданный модуль",
 )
 async def create_module(
     course_id: str,
@@ -214,7 +217,8 @@ async def create_module(
     "/modules/{module_id}",
     response_model=AdminModuleResponse,
     responses=MODULE_RESPONSES,
-    description="Update a module",
+    summary="Обновить модуль",
+    response_description="Обновленный модуль",
 )
 async def update_module(
     module_id: str,
@@ -244,7 +248,8 @@ async def update_module(
     "/modules/{module_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses=MODULE_RESPONSES,
-    description="Delete a module",
+    summary="Удалить модуль",
+    response_description="Успешное удаление",
 )
 async def delete_module(
     module_id: str,
@@ -277,7 +282,8 @@ async def delete_module(
     "/courses/{course_id}/modules/reorder",
     response_model=AdminBulkOperationResponse,
     responses={404: {"description": "Course not found"}},
-    description="Reorder modules in a course",
+    summary="Изменить порядок модулей",
+    response_description="Результат массовой операции",
 )
 async def reorder_modules(
     course_id: str,

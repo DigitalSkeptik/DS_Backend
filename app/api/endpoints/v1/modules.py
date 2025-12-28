@@ -44,13 +44,57 @@ MODULE_RESPONSES: dict[int | str, dict[str, Any]] = {
     "/courses/{course_id}",
     response_model=list[ModuleResponse],
     responses={404: {"description": "Course not found"}},
-    description="Get all modules for a course (basic info)",
+    summary="Получить модули курса",
+    response_description="Список модулей курса",
 )
 async def get_course_modules(
     course_id: str,
     session: AsyncSession = Depends(deps.get_session),
 ) -> list[ModuleResponse]:
-    """Get all modules for a course with basic info"""
+    """
+    Получить список всех модулей курса (v1 - без пагинации).
+
+    ## Особенности v1
+
+    - **Без пагинации**: Возвращает все модули сразу
+    - **Базовая информация**: Только основные данные (без контента)
+    - **Публичный доступ**: Не требует авторизации
+    - **Сортировка**: По позиции (position)
+
+    ## Возвращаемые данные
+
+    Массив модулей, каждый содержит:
+    - `unique_id` - уникальный идентификатор модуля
+    - `course_id` - ID курса
+    - `title` - название модуля
+    - `description` - краткое описание
+    - `position` - порядковый номер
+
+    **Примечание**: Полный контент модуля доступен только через
+    `GET /modules/{module_id}` для авторизованных пользователей, купивших курс.
+
+    ## Примеры использования
+
+    ```bash
+    # Получить все модули курса
+    GET /api/v1/modules/courses/{course_id}
+    ```
+
+    ## Отличия от v2
+
+    **v1**:
+    - Без пагинации (все модули сразу)
+    - Простой массив
+
+    **v2** (`/api/v2/modules/courses/{course_id}`):
+    - С пагинацией (page/page_size)
+    - Метаданные пагинации
+    - Более гибкий для больших курсов
+
+    ## Ошибки
+
+    - **404 Not Found**: Курс не найден или неактивен
+    """
     course = await session.scalar(
         select(Course).where(Course.unique_id == course_id, Course.is_active)
     )
@@ -81,14 +125,68 @@ async def get_course_modules(
     "/{module_id}",
     response_model=ModuleDetailResponse,
     responses=MODULE_RESPONSES,
-    description="Get module by ID with full content (requires course purchase)",
+    summary="Получить модуль по ID",
+    response_description="Детальная информация о модуле с контентом",
 )
 async def get_module(
     module_id: str,
     current_user: User = Depends(deps.get_current_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> ModuleDetailResponse:
-    """Get module with full content if user has purchased the course"""
+    """
+    Получить детальную информацию о модуле с полным контентом (v1).
+
+    ## Требования
+
+    - **Авторизация обязательна**: Требуется JWT токен
+    - **Покупка курса**: Пользователь должен купить курс
+    - **Активный курс**: Курс должен быть активным
+
+    ## Особенности v1
+
+    - **Без выборочных полей**: Всегда возвращает все поля
+    - **Полный контент**: Включает content_json
+    - **Статус прогресса**: Показывает завершение
+
+    ## Возвращаемые данные
+
+    - `unique_id` - уникальный идентификатор модуля
+    - `course_id` - ID курса
+    - `title` - название модуля
+    - `description` - подробное описание
+    - `content_json` - полный учебный контент (JSON)
+    - `position` - порядковый номер в курсе
+    - `is_completed` - завершен ли модуль пользователем
+    - `has_test` - есть ли тест для этого модуля
+    - `test_completed` - пройден ли тест
+
+    ## Примеры использования
+
+    ```bash
+    # Получить модуль с полным контентом
+    GET /api/v1/modules/{module_id}
+    Authorization: Bearer <token>
+    ```
+
+    ## Отличия от v2
+
+    **v1**:
+    - Всегда возвращает все поля
+    - Нет параметра fields
+
+    **v2** (`/api/v2/modules/{module_id}`):
+    - Поддержка параметра `fields`
+    - Можно запросить только нужные поля
+    - Режим `minimal` для оптимизации
+
+    ## Ошибки
+
+    - **401 Unauthorized**: Не авторизован
+    - **403 Forbidden**: Курс не куплен
+    - **404 Not Found**:
+      - Модуль не найден
+      - Курс неактивен
+    """
     module = await session.scalar(
         select(Module)
         .options(selectinload(Module.course))

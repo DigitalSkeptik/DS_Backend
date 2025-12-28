@@ -39,7 +39,7 @@ USER_RESPONSES: dict[int | str, dict[str, Any]] = {
 @router.get(
     "",
     response_model=list[AdminUserListResponse],
-    description="Get all users (admin view)",
+    summary="Получить всех пользователей (админ)",
 )
 async def get_all_users(
     skip: int = Query(0, ge=0, description="Number of users to skip"),
@@ -78,7 +78,7 @@ async def get_all_users(
     "/{user_id}",
     response_model=AdminUserResponse,
     responses=USER_RESPONSES,
-    description="Get user by ID (admin view)",
+    summary="Получить пользователя (админ)",
 )
 async def get_user(
     user_id: str,
@@ -108,7 +108,7 @@ async def get_user(
     "/{user_id}/role",
     response_model=AdminUserResponse,
     responses=USER_RESPONSES,
-    description="Update a user's role",
+    summary="Изменить роль пользователя",
 )
 async def update_user_role(
     user_id: str,
@@ -150,7 +150,7 @@ async def update_user_role(
 @router.get(
     "/stats",
     response_model=AdminStatsResponse,
-    description="Get platform statistics (admin view)",
+    summary="Получить статистику платформы",
 )
 async def get_stats(
     current_admin: User = Depends(deps.get_current_admin_user),
@@ -192,7 +192,7 @@ async def get_stats(
     "/{user_id}/courses",
     response_model=list[dict],
     responses=USER_RESPONSES,
-    description="Get courses purchased by a user",
+    summary="Получить купленные курсы пользователя",
 )
 async def get_user_courses(
     user_id: str,
@@ -235,7 +235,7 @@ async def get_user_courses(
     "/{user_id}/progress",
     response_model=dict,
     responses=USER_RESPONSES,
-    description="Get user's course progress",
+    summary="Получить прогресс пользователя",
 )
 async def get_user_progress(
     user_id: str,

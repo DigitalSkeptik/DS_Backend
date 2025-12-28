@@ -49,17 +49,23 @@ COURSE_RESPONSES: dict[int | str, dict[str, Any]] = {
 @router.get(
     "",
     response_model=list[AdminCourseListResponse],
-    description="Get all courses (admin view)",
+    summary="Получить все курсы (админ)",
+    response_description="Список всех курсов с административной информацией",
 )
 async def get_all_courses(
-    skip: int = Query(0, ge=0, description="Number of courses to skip"),
+    skip: int = Query(0, ge=0, description="Количество курсов для пропуска"),
     limit: int = Query(
-        100, ge=1, le=1000, description="Maximum number of courses to return"
+        100, ge=1, le=1000, description="Максимальное количество курсов"
     ),
     current_admin: User = Depends(deps.get_current_admin_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> list[AdminCourseListResponse]:
-    """Get all courses with admin details"""
+    """
+    Получить все курсы с административной информацией.
+
+    **Требуется роль администратора.** Возвращает все курсы (включая неактивные)
+    с временными метками создания и обновления.
+    """
     result = await session.execute(
         select(Course)
         .options(
@@ -101,14 +107,20 @@ async def get_all_courses(
     "/{course_id}",
     response_model=AdminCourseResponse,
     responses=COURSE_RESPONSES,
-    description="Get course by ID (admin view)",
+    summary="Получить курс (админ)",
+    response_description="Полная информация о курсе со всеми модулями и тестами",
 )
 async def get_course(
     course_id: str,
     current_admin: User = Depends(deps.get_current_admin_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminCourseResponse:
-    """Get course with all details"""
+    """
+    Получить полную информацию о курсе.
+
+    **Требуется роль администратора.** Возвращает курс со всеми модулями,
+    тестами, вопросами и правильными ответами.
+    """
     course = await session.scalar(
         select(Course)
         .options(
@@ -199,14 +211,20 @@ async def get_course(
     "",
     response_model=AdminCourseResponse,
     status_code=status.HTTP_201_CREATED,
-    description="Create a new course",
+    summary="Создать курс",
+    response_description="Созданный курс с полной информацией",
 )
 async def create_course(
     course_data: CourseCreateRequest,
     current_admin: User = Depends(deps.get_current_admin_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminCourseResponse:
-    """Create a new course"""
+    """
+    Создать новый курс.
+
+    **Требуется роль администратора.** Создает курс с указанными параметрами
+    и опционально привязывает теги.
+    """
     course = Course(
         title=course_data.title,
         description=course_data.description,
@@ -234,7 +252,8 @@ async def create_course(
     "/{course_id}",
     response_model=AdminCourseResponse,
     responses=COURSE_RESPONSES,
-    description="Update a course",
+    summary="Обновить курс",
+    response_description="Обновленный курс с полной информацией",
 )
 async def update_course(
     course_id: str,
@@ -242,7 +261,12 @@ async def update_course(
     current_admin: User = Depends(deps.get_current_admin_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> AdminCourseResponse:
-    """Update an existing course"""
+    """
+    Обновить существующий курс.
+
+    **Требуется роль администратора.** Обновляет указанные поля курса.
+    Поддерживает частичное обновление (только измененные поля).
+    """
     course = await session.scalar(select(Course).where(Course.unique_id == course_id))
     if not course:
         raise HTTPException(
@@ -268,14 +292,20 @@ async def update_course(
     "/{course_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses=COURSE_RESPONSES,
-    description="Delete a course",
+    summary="Удалить курс",
+    response_description="Успешное удаление (без тела ответа)",
 )
 async def delete_course(
     course_id: str,
     current_admin: User = Depends(deps.get_current_admin_user),
     session: AsyncSession = Depends(deps.get_session),
 ) -> None:
-    """Delete a course"""
+    """
+    Удалить курс.
+
+    **Требуется роль администратора.** Удаляет курс только если у него нет модулей.
+    Для удаления курса с модулями сначала удалите все модули.
+    """
     course = await session.scalar(
         select(Course)
         .options(selectinload(Course.modules))
